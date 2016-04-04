@@ -2,9 +2,15 @@
 
 import os
 import subprocess
+import argparse
+parser = argparse.ArgumentParser(description='Read xAOD')
+parser.add_argument('-n', metavar='<process name>', required=True, help='The process name (lep / had)')
+args = parser.parse_args()
+name = args.n
+print 'name : ',name
 
 data    = "/afs/cern.ch/user/h/hod/data/MC/ttbar"
-process = "lep"
+process = name
 njobs   = 50
 
 def jobfile(path,proc,jobid):

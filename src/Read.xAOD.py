@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Choose the name (lep/had)
+from array import array
 import argparse
 parser = argparse.ArgumentParser(description='Read xAOD')
 parser.add_argument('-n', metavar='<process name>',  required=True, help='The process name')
@@ -23,12 +23,12 @@ tfile = TFile(tfile,"RECREATE")
 tree = TTree("SM","SM")
 pdgid = std.vector(int)()
 p4    = ROOT.vector(TLorentzVector)()
-RunNumber = 0
-EventNumber = 0
+RunNumber = array( 'i', [ 0 ] )
+EventNumber = array( 'i', [ 0 ] )
 tree.Branch("id",pdgid) 
 tree.Branch("p4",p4)
-tree.Branch("RunNumber",RunNumber)
-tree.Branch("EventNumber",EventNumber)
+tree.Branch("RunNumber",RunNumber,"RunNumber/I")
+tree.Branch("EventNumber",EventNumber,"EventNumber/I")
 
 
 # Set up the input files:
@@ -107,8 +107,8 @@ for entry in xrange( 0,t.GetEntries()):
    if(nplus>=1 and nminus>=1): atLeast1pair = True
    if(atLeast1pair): nPairs+=1
    if(entry%1000==0): print( "Processing run #%i, event #%i  :  found pairs %i out of %i processed" % ( t.EventInfo.runNumber(), t.EventInfo.eventNumber() ,nPairs, entry+1) )
-   RunNumber = t.EventInfo.runNumber()
-   EventNumber = t.EventInfo.eventNumber()
+   RunNumber[0] = t.EventInfo.runNumber()
+   EventNumber[0] = t.EventInfo.eventNumber()
    tree.Fill()
    pass # end loop over entries
 print "Found "+str(nPairs)+" ttbar pairs"

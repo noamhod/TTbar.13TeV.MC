@@ -12,9 +12,10 @@ print 'name : ',name
 
 path = "/afs/cern.ch/user/h/hod/data/MC/ttbar/ntup"
 fmerged = path+"/tops.SM."+name+".merged.root"
-if(not os.path.isfile(fmerged)):
-   p = subprocess.Popen("hadd  "+path+"/tops.SM."+name+".merged.root  "+path+"/tops.SM."+name+".*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-   out, err = p.communicate()
+p = subprocess.Popen("rm -f  "+path+"/tops.SM."+name+".merged.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+out, err = p.communicate()
+p = subprocess.Popen("hadd  "+path+"/tops.SM."+name+".merged.root  "+path+"/tops.SM."+name+".*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+out, err = p.communicate()
 
 gROOT.LoadMacro( "src/Loader.C+" )
 
