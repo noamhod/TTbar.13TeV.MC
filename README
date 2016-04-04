@@ -29,8 +29,9 @@ To transform to TRUTH0 ntules:
 
 --------------------------------------------------------
 To make a simple hard-process tree from the TRUTH0 files:
-* python batch_analisys0.py -n lep[had]
+* python batch_analysis0.py -n lep[had]
 * bjobs -w
+* python check_analysis0.py -n lep[had]
 * python src/Test.Merged.py -n lep[had]
 * A tree with all events and info needed to calculate the weights is available in $DATADIR/ntup/tops.SM.lep[had].merged.root
 * A histogram (pdf file) of the ttbar mass at the hard-process level is available in $DATADIR/ntup/Test.TTree.lep[had].pdf 
