@@ -16,7 +16,7 @@ if(not os.path.isfile(fmerged)):
    p = subprocess.Popen("hadd  "+path+"/tops.SM."+name+".merged.root  "+path+"/tops.SM."+name+".*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    out, err = p.communicate()
 
-gROOT.LoadMacro( "run/Loader.C+" )
+gROOT.LoadMacro( "src/Loader.C+" )
 
 tfile = TFile(path+"/tops.SM."+name+".merged.root","READ")
 tree = tfile.Get("SM")
