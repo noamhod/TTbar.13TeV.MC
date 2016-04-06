@@ -16,7 +16,7 @@ njobs   = 50
 def jobfile(path,proc,jobid):
    sjobid = str(jobid)
    if(j<10): sjobid = "0"+sjobid
-   fname = path+"/ana."+proc+"."+sjobid+".sh"
+   fname = path+"/ana1."+proc+"."+sjobid+".sh"
    lname = fname.replace(".sh",".log").replace("job","log")
    base = os.getcwd()
    f = open(fname,"w")
@@ -27,12 +27,12 @@ def jobfile(path,proc,jobid):
    f.write("export RUCIO_ACCOUNT=hod\n")
    f.write("export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase\n")
    f.write("source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh\n")
-   f.write('lsetup "rcsetup Base,2.4.4"\n')
+   f.write('lsetup "rcsetup Base,2.4.5"\n')
    f.write("rc find_packages\n")
    f.write("rc compile\n")
-   f.write("/bin/cp -f /afs/cern.ch/user/h/hod/ttbar/src/Read.xAOD.py .\n")
-   f.write("python Read.xAOD.py -n "+proc+" -i "+sjobid+"\n")
-   f.write("/bin/cp -f tops.SM.root "+data+"/ntup/tops.SM."+proc+"."+sjobid+".root\n")
+   f.write("/bin/cp -f /afs/cern.ch/user/h/hod/ttbar/src/Read.xAOD.TRUTH1.py .\n")
+   f.write("python Read.xAOD.TRUTH1.py -n "+proc+" -i "+sjobid+"\n")
+   f.write("/bin/cp -f tops.SM.TRUTH1.root "+data+"/ntup/tops.SM.TRUTH1."+proc+"."+sjobid+".root\n")
    f.write("echo \"host = $HOSTNAME\"\n")
    return fname
 

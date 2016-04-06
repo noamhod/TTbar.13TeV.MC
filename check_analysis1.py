@@ -21,14 +21,14 @@ njobs   = 50
 def logfile(path,proc,jobid,seed):
    sjobid = str(jobid)
    if(j<10): sjobid = "0"+sjobid
-   f = path+"/ana0."+proc+"."+sjobid+".log"
+   f = path+"/ana1."+proc+"."+sjobid+".log"
    return f
 
 
 def trffile(path,proc,jobid,seed):
    sjobid = str(jobid)
    if(j<10): sjobid = "0"+sjobid
-   f = path+"/tops.SM.TRUTH0."+proc+"."+sjobid+".root"
+   f = path+"/tops.SM.TRUTH1."+proc+"."+sjobid+".root"
    return f
 
 

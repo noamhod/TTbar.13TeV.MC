@@ -14,15 +14,15 @@ ROOT.gROOT.SetBatch(1)
 
 path = "/afs/cern.ch/user/h/hod/data/MC/ttbar/ntup"
 fmerged = path+"/tops.SM."+name+".merged.root"
-p = subprocess.Popen("rm -f  "+path+"/tops.SM."+name+".merged.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p = subprocess.Popen("rm -f  "+path+"/tops.SM.TRUTH0."+name+".merged.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 out, err = p.communicate()
-p = subprocess.Popen("hadd  "+path+"/tops.SM."+name+".merged.root  "+path+"/tops.SM."+name+".*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p = subprocess.Popen("hadd  "+path+"/tops.SM.TRUTH0."+name+".merged.root  "+path+"/tops.SM."+name+".*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 out, err = p.communicate()
 print out
 
 gROOT.LoadMacro( "src/Loader.C+" )
 
-tfile = TFile(path+"/tops.SM."+name+".merged.root","READ")
+tfile = TFile(path+"/tops.SM.TRUTH0."+name+".merged.root","READ")
 tree = tfile.Get("SM")
 
 hmSM = TH1D("hmSM", ";Truth #it{m}_{#it{t}#bar{#it{t}}} [GeV];Events",25,350,850)
@@ -48,4 +48,4 @@ hmSM.SetMinimum(0.1)
 hmSM.Draw()
 cnv.Update()
 cnv.RedrawAxis()
-cnv.SaveAs(path+"/Test.TTree."+name+".pdf")
+cnv.SaveAs(path+"/Test.TTree.TRUTH0."+name+".pdf")
