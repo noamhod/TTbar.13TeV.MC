@@ -34,7 +34,7 @@ tree.Branch("EventNumber",EventNumber,"EventNumber/I")
 # Set up the input files:
 xaodpath = "$HOME/data/MC/ttbar/ntup/"
 fullpath = ROOT.gSystem.ExpandPathName(xaodpath)
-fileName = fullpath+"/DAOD_TRUTH0.NTUP."+name+"."+jobid+".root"
+fileName = fullpath+"/DAOD_TRUTH1.NTUP."+name+"."+jobid+".root"
 treeName = "CollectionTree" # default when making transient tree anyway
 f = ROOT.TFile.Open(fileName)
 t = ROOT.xAOD.MakeTransientTree(f, treeName) # Make the "transient tree"
@@ -100,12 +100,13 @@ for entry in xrange( 0,t.GetEntries()):
       if(p.pdgId()==-6):
          nminus+=1
          AddWithParents(p,indices)
-      #if(abs(p.pdgId())==6): GetRecord(p)
-      if(nplus==1 and nminus==1): break
+      if(abs(p.pdgId())==6 or abs(p.pdgId())==5): GetRecord(p)
+      #if(nplus==1 and nminus==1): break
       pass # end for loop over truth particles collection
    atLeast1pair = False
    if(nplus>=1 and nminus>=1): atLeast1pair = True
    if(atLeast1pair): nPairs+=1
+   print ""
    if(entry%1000==0): print( "Processing run #%i, event #%i  :  found pairs %i out of %i processed" % ( t.EventInfo.runNumber(), t.EventInfo.eventNumber() ,nPairs, entry+1) )
    RunNumber[0] = t.EventInfo.runNumber()
    EventNumber[0] = t.EventInfo.eventNumber()

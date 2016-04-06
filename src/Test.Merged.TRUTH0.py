@@ -13,10 +13,10 @@ print 'name : ',name
 ROOT.gROOT.SetBatch(1)
 
 path = "/afs/cern.ch/user/h/hod/data/MC/ttbar/ntup"
-fmerged = path+"/tops.SM."+name+".merged.root"
+fmerged = path+"/tops.SM.TRUTH0."+name+".merged.root"
 p = subprocess.Popen("rm -f  "+path+"/tops.SM.TRUTH0."+name+".merged.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 out, err = p.communicate()
-p = subprocess.Popen("hadd  "+path+"/tops.SM.TRUTH0."+name+".merged.root  "+path+"/tops.SM."+name+".*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+p = subprocess.Popen("hadd  "+fmerged+"  "+path+"/tops.SM.TRUTH0."+name+".*.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 out, err = p.communicate()
 print out
 

@@ -14,6 +14,7 @@ print 'jobid : ',jobid
 
 # Set up ROOT and RootCore:
 import ROOT
+ROOT.gROOT.SetBatch(1)
 ROOT.gROOT.Macro( '$ROOTCOREDIR/scripts/load_packages.C' )
 if(not ROOT.xAOD.Init().isSuccess()): print "Failed xAOD.Init()" # Initialize the xAOD infrastructure
 

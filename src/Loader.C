@@ -7,4 +7,5 @@
 #pragma link C++ class vector<vector<unsigned int> >+;
 #pragma link C++ class vector<vector<string> >+;
 #pragma link C++ class vector<TLorentzVector >+;
+#pragma link C++ class vector<vector<TLorentzVector> >+;
 #endif
