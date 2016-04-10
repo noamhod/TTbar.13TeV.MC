@@ -27,6 +27,37 @@ def plotHist(fname,name,logy=False):
    cnv.RedrawAxis()
    cnv.SaveAs(fname)
 
+def plotHist2(fname,name1,name2,logy=False):
+   cnv = TCanvas("cnv","",600,600)
+   cnv.Draw()
+   cnv.cd()
+   if(logy): cnv.SetLogy()
+   if(histos[name1].GetMaximum()>histos[name2].GetMaximum()):
+      histos[name1].SetMinimum(0)
+      histos[name1].Draw()
+      histos[name2].Draw("same")
+   else:
+      histos[name2].SetMinimum(0)
+      histos[name2].Draw()
+      histos[name1].Draw("same")
+   leg = TLegend(0.5,0.4,0.87,0.9,"","brNDC");
+   leg.SetFillStyle(4000); # will be transparent
+   leg.SetFillColor(0);
+   leg.SetTextFont(42);
+   leg.SetBorderSize(0);
+   leg.AddEntry(0, "MadGraph+Pythia8 OTF", "");
+   leg.AddEntry(0, "#it{gg}#rightarrow#it{t}_{lep}#it{t}_{had/lep}", "");
+   leg.AddEntry(histos[name1],"Hard Process top","ple");
+   leg.AddEntry(histos[name2],"Reconstructed tops","ple");
+   leg.Draw("same")
+   cnv.Update()
+   cnv.RedrawAxis()
+   cnv.SaveAs(fname)
+
+addHist("HarProcessTops:mtt", ";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350, ROOT.kAzure-9, 24)
+addHist("HarProcessTops:pTlep", ";First hard-process p_{T}(#it{t}_{lep}) [GeV];Events",40,50,550, ROOT.kAzure-9, 24)
+addHist("HarProcessTops:pThad", ";Second hard-process p_{T}(#it{t}_{had}) [GeV];Events",40,50,550, ROOT.kAzure-9, 24)
+
 addHist("Muons:Mult", ";Muon multiplicity;Events",5,0,5)
 addHist("Muons:pT1",  ";Leading muon p_{T} [GeV];Events",50,30,530)
 addHist("Muons:pT2",  ";Subeading muon p_{T} [GeV];Events",50,30,530)
@@ -56,16 +87,16 @@ addHist("ETmiss:dPhiElectrons", ";#Delta#phi(#it{E}_{T}^{miss},Electron);Events"
 addHist("ETmiss:dPhiJets",      ";#Delta#phi(#it{E}_{T}^{miss},Jet);Events",32,0,ROOT.TMath.Pi())
 addHist("ETmiss:dPhiBjets",     ";#Delta#phi(#it{E}_{T}^{miss},Bjet);Events",32,0,ROOT.TMath.Pi())
 
-addHist("Muons:dRJets",      ";#DeltaR(Muon,Jet);Events",50,0,7)
-addHist("Muons:dRBjets",     ";#DeltaR(Muon,Bjet);Events",50,0,7)
+addHist("Muons:dRJets",      ";#DeltaR(Muon,Jet);Events",35,0,7)
+addHist("Muons:dRBjets",     ";#DeltaR(Muon,Bjet);Events",35,0,7)
 
-addHist("Electrons:dRJets",  ";#DeltaR(Electrons,Jet);Events",50,0,7)
-addHist("Electrons:dRBjets", ";#DeltaR(Electrons,Bjet);Events",50,0,7)
+addHist("Electrons:dRJets",  ";#DeltaR(Electrons,Jet);Events",35,0,7)
+addHist("Electrons:dRBjets", ";#DeltaR(Electrons,Bjet);Events",35,0,7)
 
-addHist("Jets:dRBjets", ";#DeltaR(Jet,Bjet);Events",50,0,7)
+addHist("Jets:dRBjets", ";#DeltaR(Jet,Bjet);Events",35,0,7)
 
-addHist("Jets:dR12", ";#DeltaR(Jet1,Jet2);Events",50,0,7)
-addHist("BJets:dR12", ";#DeltaR(Bjet1,Bjet2);Events",50,0,7)
+addHist("Jets:dR12", ";#DeltaR(Jet1,Jet2);Events",35,0,7)
+addHist("BJets:dR12", ";#DeltaR(Bjet1,Bjet2);Events",35,0,7)
 
 addHist("Jets:mjj",  ";#it{m}(Jet1,Jet2) [GeV];Events",50,0,150)
 
@@ -76,4 +107,14 @@ addHist("TopTag:mTw", ";#it{m}_{T}(#it{W}) [GeV];Events",50,0,150)
 addHist("TopTag:mTt", ";#it{m}_{T}(#it{t}_{lep}) [GeV];Events",50,50,350)
 addHist("TopTag:mw",  ";#it{m}(#it{W}) [GeV];Events",50,0,150)
 addHist("TopTag:mt",  ";#it{m}(#it{t}_{had}) [GeV];Events",50,50,350)
-addHist("TopTag:mtt", ";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",80,350,1000)
+
+addHist("HarProcessTops:dRlep", ";#DeltaR(#it{t}_{lep}^{tru},#it{t}_{lep}^{rec});Events",35,0,7)
+addHist("HarProcessTops:dRhad", ";#DeltaR(#it{t}_{had}^{tru},#it{t}_{had}^{rec});Events",35,0,7)
+
+addHist("HarProcessTops:dpTRellep", ";#it{t}_{lep}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",50,-5,5)
+addHist("HarProcessTops:dpTRelhad", ";#it{t}_{had}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",50,-5,5)
+
+addHist("TopTag:pTtLep", ";#it{p}_{T}(#it{t}_{lep}) [GeV];Events",40,50,550)
+addHist("TopTag:pTtHad", ";#it{p}_{T}(#it{t}_{had}) [GeV];Events",40,50,550)
+addHist("TopTag:dRlephad", ";#DeltaR(#it{t}_{lep}^{rec},#it{t}_{had}^{rec});Events",35,0,7)
+addHist("TopTag:mtt", ";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350)
