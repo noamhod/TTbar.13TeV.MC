@@ -28,16 +28,21 @@ def jobfile(path,proc,jobid,seed):
    if  (proc=="inc"): runnumber = "999990"
    elif(proc=="lep"): runnumber = "999991"
    elif(proc=="had"): runnumber = "999992"
+   elif(proc=="el"):  runnumber = "999993"
+   elif(proc=="mu"):  runnumber = "999994"
    procname = ""
    if  (proc=="inc"): procname = "Inc"
    elif(proc=="lep"): procname = "Lep"
    elif(proc=="had"): procname = "Had"
+   elif(proc=="el"):  procname = "Electrons"
+   elif(proc=="mu"):  procname = "Muons"
    f = open(fname,"w")
    f.write("#!/bin/bash\n")
    f.write("echo \"host = $HOSTNAME\"\n")
    f.write("rm -f "+lname+"\n")
    f.write("/bin/cp -f  "+base+"/src/*  /tmp/hod/\n")
    f.write("cd /tmp/hod/\n")
+   f.write("ls -lrt\n")
    f.write("export RUCIO_ACCOUNT=hod\n")
    f.write("export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase\n")
    f.write("source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh\n")
@@ -45,6 +50,7 @@ def jobfile(path,proc,jobid,seed):
    f.write("cmt co -r MadGraphControl-00-05-33 Generators/MadGraphControl\n")
    f.write("cd Generators/MadGraphControl/cmt\n")
    f.write("make clean; make\n")
+   f.write("cd /tmp/hod/\n")
    f.write("Generate_tf.py --ecmEnergy=13000. --maxEvents="+snevts+" --firstEvent="+firstevent+" --runNumber="+runnumber+" --randomSeed="+sseed+" --outputEVNTFile=EVNT.root --jobConfig=MC15."+runnumber+".MadGraphPythia8EvtGen_A14NNPDF23_ttbar_"+procname+".py\n")
    f.write("/bin/cp -f log.generate "+data+"/evnt/log.generate."+proc+"."+sjobid+"\n")
    f.write("/bin/cp -f EVNT.root "+data+"/evnt/EVNT."+proc+"."+sjobid+".root\n")

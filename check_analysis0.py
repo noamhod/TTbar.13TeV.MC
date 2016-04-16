@@ -8,7 +8,7 @@ import subprocess
 # Choose the name (lep/had)
 import argparse
 parser = argparse.ArgumentParser(description='Read xAOD')
-parser.add_argument('-n', metavar='<process name>', required=True, help='The process name (lep / had)')
+parser.add_argument('-n', metavar='<process name>', required=True, help='The process name (lep / had / el / mu)')
 args = parser.parse_args()
 name = args.n
 print 'name : ',name

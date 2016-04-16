@@ -1,14 +1,14 @@
 #!/usr/bin/python
 
 import ROOT
-from ROOT import std, gROOT, gStyle, TLorentzVector, TMath
+from ROOT import std, gROOT, gStyle, TLorentzVector, TMath, TRandom3
 import math
 
 
 class TTbarTagger:
    'Class for ttbar reconstruction'
 
-   def __init__(self,jets,ijets,ibjets,lepton,etmis,mode=1):
+   def __init__(self,jets,ijets,ibjets,lepton,etmis,EventNumber,mode=1):
       # arguments
       self.mode   = mode # 0: all-hadronic, 1: one-lepton, 2: dilepton
       self.p4_lepton = lepton
@@ -19,6 +19,7 @@ class TTbarTagger:
 
       # general
       self.mW    = 80.385
+      self.wW    = 2.085
       self.ibjet = -1
       self.bjet  = TLorentzVector()
       self.njets = len(ijets)
@@ -29,12 +30,23 @@ class TTbarTagger:
       self.mTt = -1
       self.p4_WT = TLorentzVector()
       self.p4_tT = TLorentzVector()
+      self.p4_Wl1 = TLorentzVector()
+      self.p4_Wl2 = TLorentzVector()
+      self.p4_Wl  = TLorentzVector()
+      self.p4_tl1 = TLorentzVector()
+      self.p4_tl2 = TLorentzVector()
+      self.p4_tl  = TLorentzVector()
+      self.p4_nu1 = TLorentzVector()
+      self.p4_nu2 = TLorentzVector()
+      self.p4_nu  = TLorentzVector()
       
       # hadronic top1
       self.mw = -1
       self.mt = -1
       self.p4_W = TLorentzVector()
       self.p4_t = TLorentzVector()
+
+      self.rand = TRandom3(EventNumber)
 
       #######################################
       if(not self.MinimumInput()): return ###
@@ -51,23 +63,70 @@ class TTbarTagger:
       # print class_name, "destroyed"
 
    def MinimumInput(self):
-      if(self.njets<3):  return False
+      if(self.njets<4):  return False
       if(self.nbjets<1): return False
       return True
 
    def SetBjet(self):
       if(len(self.ibjets)>0): self.ibjet = self.ibjets[0]
       if(len(self.ibjets)>1):
+         # associate the semi-leptonic with the b which is closest (dR) to the lepton
          dr1 = self.p4_lepton.DeltaR(self.jets[self.ibjets[0]])
-         dr2 = self.p4_lepton.DeltaR(self.jets[self.ibjets[0]])
+         dr2 = self.p4_lepton.DeltaR(self.jets[self.ibjets[1]])
          if(dr1>dr2):
             self.ibjet = self.ibjets[1]
       self.bjet = self.jets[self.ibjet]
+
+   def SetPzNu(self,wMass):
+      mL = self.p4_lepton.M()
+      dphi = self.p4_lepton.Phi() - self.p4_etmis.Phi()
+      A = (wMass*wMass-mL*mL)/2 + self.p4_etmis.Pt()*self.p4_lepton.Pt()*math.cos(dphi)
+      a = math.pow(self.p4_lepton.Pz(),2) - math.pow(self.p4_lepton.E(),2)
+      b = 2.*A*self.p4_lepton.Pz()
+      c = A*A - math.pow(self.p4_etmis.Pt(),2)*math.pow(self.p4_lepton.E(),2)
+      d = b*b-4.*a*c
+      nuz1 = 0
+      nuz2 = 0
+      if(d>0.):
+         nuz1 = (-b + math.sqrt(d))/(2.*a)
+         nuz2 = (-b - math.sqrt(d))/(2.*a)
+      # print "nuz1=",nuz1
+      # print "nuz2=",nuz2
+      Enu1 = math.sqrt( math.pow(self.p4_etmis.Pt(),2) + math.pow(nuz1,2) )
+      Enu2 = math.sqrt( math.pow(self.p4_etmis.Pt(),2) + math.pow(nuz2,2) )
+      nu1 = TLorentzVector()
+      nu2 = TLorentzVector()
+      nu1.SetPxPyPzE(self.p4_etmis.Px(),self.p4_etmis.Py(),nuz1,Enu1)
+      nu2.SetPxPyPzE(self.p4_etmis.Px(),self.p4_etmis.Py(),nuz2,Enu2)
+      self.p4_nu1 = nu1
+      self.p4_nu2 = nu2
+      self.p4_Wl1 = self.p4_lepton + self.p4_nu1
+      self.p4_Wl2 = self.p4_lepton + self.p4_nu2
+      self.p4_tl1 = self.p4_Wl1 + self.bjet
+      self.p4_tl2 = self.p4_Wl2 + self.bjet
+      if(abs(self.p4_Wl1.M()-self.mW) < abs(self.p4_Wl2.M()-self.mW)): self.p4_nu = nu1
+      else:                                                            self.p4_nu = nu2
+      self.p4_Wl = self.p4_lepton + self.p4_nu
+      self.p4_tl = self.p4_Wl + self.bjet
+      if(nuz1==0 and nuz2==0): return False
+      return True
 
    def SetTopLep(self):
       metT = self.p4_etmis.Pt()
       lepT = self.p4_lepton.Pt()
       bT   = self.bjet.Pt()
+      ##########################################
+      isOK = self.SetPzNu(self.mW)
+      if(not isOK):
+         nsteps = 1000
+         for i in xrange(1,nsteps+1):
+            mW = self.rand.BreitWigner(self.mW,self.wW)
+            # print "i=%i, mW=%g" % (i,mW)
+            if(self.SetPzNu(mW)):
+               isOK = True
+               break
+      if(not isOK): self.SetPzNu(self.mW)
+      ##########################################
       self.p4_WT = self.p4_lepton + self.p4_etmis
       self.mTw = math.sqrt((metT+lepT)*(metT+lepT) - (self.p4_WT.Px()*self.p4_WT.Px()) - (self.p4_WT.Py()*self.p4_WT.Py()))
       self.p4_tT = self.p4_WT + self.bjet

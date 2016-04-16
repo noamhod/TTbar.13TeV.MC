@@ -30,6 +30,7 @@ def jobfile(path,proc,jobid):
    f.write('lsetup "rcsetup Base,2.4.5"\n')
    f.write("rc find_packages\n")
    f.write("rc compile\n")
+   f.write("cd /tmp/hod/\n")
    f.write("/bin/cp -f /afs/cern.ch/user/h/hod/ttbar/src/Read.xAOD.TRUTH1.py .\n")
    f.write("python Read.xAOD.TRUTH1.py -n "+proc+" -i "+sjobid+"\n")
    f.write("/bin/cp -f tops.SM.TRUTH1.root "+data+"/ntup/tops.SM.TRUTH1."+proc+"."+sjobid+".root\n")

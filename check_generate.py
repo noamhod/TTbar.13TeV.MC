@@ -18,13 +18,13 @@ data    = "/afs/cern.ch/user/h/hod/data/MC/ttbar"
 process = name
 njobs   = 50
 
-def logfile(path,proc,jobid,seed):
+def logfile(path,proc,jobid):
    sjobid = str(jobid)
    if(j<10): sjobid = "0"+sjobid
    fname = path+"/gen."+proc+"."+sjobid+".log"
    return fname
 
-def genfiles(path,proc,jobid,seed):
+def genfiles(path,proc,jobid):
    sjobid = str(jobid)
    if(j<10): sjobid = "0"+sjobid
    f1 = path+"/log.generate."+process+"."+sjobid
@@ -33,16 +33,16 @@ def genfiles(path,proc,jobid,seed):
 
 print "Filaed jobs:"
 for j in range(1,njobs+1):
-   seed  = j
    jobid = j
-   logfilename = logfile(data+"/logs",process,jobid,seed)
+   logfilename = logfile(data+"/logs",process,jobid)
    jobfilename = logfilename.replace(".log",".sh").replace("log","job")
    bsubcmd = "bsub -q 1nd -o "+logfilename+" "+jobfilename
+   #print "CHECKING ",bsubcmd
    if(os.path.isfile(logfilename) and os.access(logfilename, os.R_OK)):
       f = open(logfilename)
       s = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
       if(s.find('trf exit code 0')==-1):
          print bsubcmd
-      genlog, genevnt = genfiles(data+"/evnt",process,jobid,seed)
+      genlog, genevnt = genfiles(data+"/evnt",process,jobid)
       if(not os.path.isfile(genlog) or not os.path.isfile(genlog)):
          print "   ",bsubcmd

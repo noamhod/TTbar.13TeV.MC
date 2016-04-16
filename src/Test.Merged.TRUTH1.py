@@ -61,7 +61,9 @@ n=1
 for event in tree:
 
    ### counts
-   if(n%10000==0): print "processed "+str(n)+", cutflow up to previous event:",cutflow
+   if(n%10000==0):
+      print "processed "+str(n)+", cutflow up to previous event:"
+      print cutflow
       
    n+=1
 
@@ -180,16 +182,66 @@ for event in tree:
       lep   = TLorentzVector()
       if(len(muons)>0 and len(electrons)==0): lep = event.p4_muons[0]
       if(len(muons)==0 and len(electrons)>0): lep = event.p4_electrons[0]
-      ttTag = TTbarTagger(event.p4_akt4jets,jets,bjets,lep,etmis,1)
+      ttTag = TTbarTagger(event.p4_akt4jets,jets,bjets,lep,etmis,event.EventNumber,1)
       if(not ttTag.MinimumInput()): continue
+
+      # print "MET=(%g,%g,%g,%g), E=%g, M=%g" % (etmis.Pt(),etmis.Eta(),etmis.Phi(),etmis.M(),etmis.E(),etmis.M())
+      # print "nu1=(%g,%g,%g,%g), pT=%g, M=%g" % (ttTag.p4_nu1.Px(),ttTag.p4_nu1.Py(),ttTag.p4_nu1.Pz(),ttTag.p4_nu1.E(),ttTag.p4_nu1.Pt(),ttTag.p4_nu1.M())
+      # print "nu2=(%g,%g,%g,%g), pT=%g, M=%g" % (ttTag.p4_nu2.Px(),ttTag.p4_nu2.Py(),ttTag.p4_nu2.Pz(),ttTag.p4_nu2.E(),ttTag.p4_nu2.Pt(),ttTag.p4_nu2.M())
+      # print "mW1=",(ttTag.p4_lepton+ttTag.p4_nu1).M()
+      # print "mW2=",(ttTag.p4_lepton+ttTag.p4_nu2).M()
+      # print "cost1=",ttTag.p4_lepton.Vect().Dot(ttTag.p4_nu1.Vect())/(ttTag.p4_lepton.Vect().Mag()*ttTag.p4_nu1.Vect().Mag())
+      # print "cost2=",ttTag.p4_lepton.Vect().Dot(ttTag.p4_nu2.Vect())/(ttTag.p4_lepton.Vect().Mag()*ttTag.p4_nu2.Vect().Mag())
+      for k in xrange(event.p4_wbosons.size()):
+         if(event.id_wbosons_children[k].size()!=2): continue
+         id0 = abs(event.id_wbosons_children[k][0])
+         id1 = abs(event.id_wbosons_children[k][1])
+         if((id0==14 and id1==13) or (id0==13 and id1==14)): continue
+         v = TLorentzVector()
+         l = TLorentzVector()
+         if(id0==14 and id1==13):
+            v = event.p4_wbosons_children[k][0]
+            l = event.p4_wbosons_children[k][1]
+         else:
+            v = event.p4_wbosons_children[k][1]
+            l = event.p4_wbosons_children[k][0]
+         # cost = v.Vect().Dot(l.Vect())/(v.Vect().Mag()*l.Vect().Mag())
+         # print "cost=",cost
+         # print "v=(%g,%g,%g,%g), pT=%g, M=%g" % (v.Px(),v.Py(),v.Pz(),v.E(),v.Pt(),v.M())
+         # print "l=(%g,%g,%g,%g), pT=%g, M=%g" % (l.Px(),l.Py(),l.Pz(),l.E(),l.Pt(),l.M())
+         # print "mW=",(l+v).M()
+         # print ""
+
       graphics.histos["TopTag:mTw"].Fill(ttTag.mTw)
+      graphics.histos["TopTag:mLw"].Fill(ttTag.p4_Wl.M())
+      graphics.histos["TopTag:mLw0"].Fill(ttTag.p4_Wl.M())
+      graphics.histos["TopTag:mLw1"].Fill(ttTag.p4_Wl1.M())
+      graphics.histos["TopTag:mLw2"].Fill(ttTag.p4_Wl2.M())
+      graphics.histos["TopTag:dRLw12"].Fill(ttTag.p4_Wl1.DeltaR(ttTag.p4_Wl2))
       graphics.histos["TopTag:mTt"].Fill(ttTag.mTt)
-      graphics.histos["TopTag:mw"].Fill(ttTag.mw)
-      graphics.histos["TopTag:mt"].Fill(ttTag.mt)
-      graphics.histos["TopTag:mtt"].Fill(ttTag.mtt)
-      graphics.histos["TopTag:pTtLep"].Fill(ttTag.p4_tT.Pt())
+      graphics.histos["TopTag:mLt"].Fill(ttTag.p4_tl.M())
+      graphics.histos["TopTag:mLt0"].Fill(ttTag.p4_tl.M())
+      graphics.histos["TopTag:mLt1"].Fill(ttTag.p4_tl1.M())
+      graphics.histos["TopTag:mLt2"].Fill(ttTag.p4_tl2.M())
+      graphics.histos["TopTag:dRLt12"].Fill(ttTag.p4_tl1.DeltaR(ttTag.p4_tl2))
+      graphics.histos["TopTag:mwHad"].Fill(ttTag.p4_w.M())#(ttTag.mw)
+      graphics.histos["TopTag:mtHad"].Fill(ttTag.p4_t.M())#(ttTag.mt)
+      graphics.histos["TopTag:mTtt"].Fill( (ttTag.p4_t+ttTag.p4_tT).M() )#(ttTag.mtt)
+      graphics.histos["TopTag:mtt"].Fill( (ttTag.p4_t+ttTag.p4_tl).M() )#(ttTag.mtt)
+      graphics.histos["TopTag:mtt0"].Fill( (ttTag.p4_t+ttTag.p4_tl).M() )
+      graphics.histos["TopTag:mtt1"].Fill( (ttTag.p4_t+ttTag.p4_tl1).M() )
+      graphics.histos["TopTag:mtt2"].Fill( (ttTag.p4_t+ttTag.p4_tl2).M() )
+      graphics.histos["TopTag:pTtTLep"].Fill(ttTag.p4_tT.Pt())
+      graphics.histos["TopTag:pTtLep"].Fill(ttTag.p4_tl.Pt())
+      graphics.histos["TopTag:pTtLep0"].Fill(ttTag.p4_tl.Pt())
+      graphics.histos["TopTag:pTtLep1"].Fill(ttTag.p4_tl1.Pt())
+      graphics.histos["TopTag:pTtLep2"].Fill(ttTag.p4_tl2.Pt())
       graphics.histos["TopTag:pTtHad"].Fill(ttTag.p4_t.Pt())
-      graphics.histos["TopTag:dRlephad"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tT))
+      graphics.histos["TopTag:dRlepThad"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tT))
+      graphics.histos["TopTag:dRlephad"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tl))#(ttTag.p4_t.DeltaR(ttTag.p4_tT))
+      graphics.histos["TopTag:dRlep0had"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tl))
+      graphics.histos["TopTag:dRlep1had"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tl1))
+      graphics.histos["TopTag:dRlep2had"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tl2))
       ######## this is process specific ########
       if(len(p4_tops)==2 and len(topdecay)==2):
          itL = -1
@@ -200,13 +252,28 @@ for event in tree:
          elif(topdecay[0]=="had"):
             itH = 0
             itL = 1
-         graphics.histos["HarProcessTops:dRlep"].Fill(ttTag.p4_tT.DeltaR(p4_tops[itL]))
+         graphics.histos["HarProcessTops:dRlepT"].Fill(ttTag.p4_tT.DeltaR(p4_tops[itL]))
+         graphics.histos["HarProcessTops:dRlep"].Fill(ttTag.p4_tl.DeltaR(p4_tops[itL]))
+         graphics.histos["HarProcessTops:dRlep0"].Fill(ttTag.p4_tl.DeltaR(p4_tops[itL]))
+         graphics.histos["HarProcessTops:dRlep1"].Fill(ttTag.p4_tl1.DeltaR(p4_tops[itL]))
+         graphics.histos["HarProcessTops:dRlep2"].Fill(ttTag.p4_tl2.DeltaR(p4_tops[itL]))
          graphics.histos["HarProcessTops:dRhad"].Fill(ttTag.p4_t.DeltaR(p4_tops[itH]))
-         graphics.histos["HarProcessTops:dpTRellep"].Fill( (ttTag.p4_tT.Pt()-p4_tops[itL].Pt())/p4_tops[itL].Pt() )
+         graphics.histos["HarProcessTops:dpTRellepT"].Fill( (ttTag.p4_tT.Pt()-p4_tops[itL].Pt())/p4_tops[itL].Pt() )
+         graphics.histos["HarProcessTops:dpTRellep"].Fill( (ttTag.p4_tl.Pt()-p4_tops[itL].Pt())/p4_tops[itL].Pt() )
+         graphics.histos["HarProcessTops:dpTRellep0"].Fill( (ttTag.p4_tl.Pt()-p4_tops[itL].Pt())/p4_tops[itL].Pt() )
+         graphics.histos["HarProcessTops:dpTRellep1"].Fill( (ttTag.p4_tl1.Pt()-p4_tops[itL].Pt())/p4_tops[itL].Pt() )
+         graphics.histos["HarProcessTops:dpTRellep2"].Fill( (ttTag.p4_tl2.Pt()-p4_tops[itL].Pt())/p4_tops[itL].Pt() )
          graphics.histos["HarProcessTops:dpTRelhad"].Fill( (ttTag.p4_t.Pt()-p4_tops[itH].Pt())/p4_tops[itH].Pt() )
          graphics.histos["HarProcessTops:mtt"].Fill( (p4_tops[0]+p4_tops[1]).M() )
          graphics.histos["HarProcessTops:pTlep"].Fill( p4_tops[itL].Pt() )
          graphics.histos["HarProcessTops:pThad"].Fill( p4_tops[itH].Pt() )
+         graphics.histos["HarProcessTops:dmRellepT"].Fill( (ttTag.p4_t+ttTag.p4_tT).M()/(p4_tops[0]+p4_tops[1]).M()-1. )
+         graphics.histos["HarProcessTops:dmRellep"].Fill( (ttTag.p4_t+ttTag.p4_tl).M()/(p4_tops[0]+p4_tops[1]).M()-1. )
+
+         graphics.histos["HarProcessTops:dpTRel:dRtru:lepT"].Fill( ttTag.p4_tT.DeltaR(p4_tops[itL]) , ttTag.p4_tT.Pt()/p4_tops[itL].Pt()-1. )
+         graphics.histos["HarProcessTops:dpTRel:dRtru:lep"].Fill( ttTag.p4_tl.DeltaR(p4_tops[itL]) , ttTag.p4_tl.Pt()/p4_tops[itL].Pt()-1. )
+         graphics.histos["HarProcessTops:dpTRel:dRtru:had"].Fill( ttTag.p4_t.DeltaR(p4_tops[itH]) , ttTag.p4_t.Pt()/p4_tops[itH].Pt()-1. )
+
       else:
          print "Warning: hard process problem in event %i (EventNumber=%i and RunNumber=%i)" % (n,event.EventNumber,event.RunNumber)
          print id_tops
@@ -222,8 +289,8 @@ graphics.plotHist(fname+"(", "Muons:Mult")
 graphics.plotHist(fname,     "Muons:pT1",True)
 graphics.plotHist(fname,     "Muons:pT2",True)
 graphics.plotHist(fname,     "Electrons:Mult")
-graphics.plotHist(fname,     "Electrons:pT1",True)
-graphics.plotHist(fname,     "Electrons:pT2",True)
+#graphics.plotHist(fname,     "Electrons:pT1",True)
+#graphics.plotHist(fname,     "Electrons:pT2",True)
 graphics.plotHist(fname,     "Jets:Mult")
 graphics.plotHist(fname,     "Jets:pT1",True)
 graphics.plotHist(fname,     "Jets:pT2",True)
@@ -235,8 +302,8 @@ graphics.plotHist(fname,     "BJets:pT2",True)
 # graphics.plotHist(fname,     "BJets:pT3",True)
 # graphics.plotHist(fname,     "BJets:pT4",True)
 graphics.plotHist(fname,     "ETmiss:eT",True)
-graphics.plotHist(fname,     "Muons:MWT",True)
-graphics.plotHist(fname,     "Electrons:MWT",True)
+graphics.plotHist(fname,     "Muons:MWT",False)
+#graphics.plotHist(fname,     "Electrons:MWT",True)
 # graphics.plotHist(fname,     "ETmiss:dPhiMuons")  
 # graphics.plotHist(fname,     "ETmiss:dPhiElectrons")
 # graphics.plotHist(fname,     "ETmiss:dPhiJets")
@@ -247,18 +314,54 @@ graphics.plotHist(fname,     "Electrons:MWT",True)
 # graphics.plotHist(fname,     "Jets:dRBjets")
 graphics.plotHist(fname,     "Jets:dR12")
 graphics.plotHist(fname,     "BJets:dR12")
+graphics.plotHist(fname,     "TopTag:mwHad")
 graphics.plotHist(fname,     "TopTag:mTw")
+graphics.plotHist(fname,     "TopTag:mLw")
+graphics.plotHist(fname,     "TopTag:mLw0")
+graphics.plotHist(fname,     "TopTag:mLw1")
+graphics.plotHist(fname,     "TopTag:mLw2")
+graphics.plotHist(fname,     "TopTag:dRLw12")
+graphics.plotHist(fname,     "TopTag:mtHad")
 graphics.plotHist(fname,     "TopTag:mTt")
-graphics.plotHist(fname,     "TopTag:mw")
-graphics.plotHist(fname,     "TopTag:mt")
+graphics.plotHist(fname,     "TopTag:mLt")
+graphics.plotHist(fname,     "TopTag:mLt0")
+graphics.plotHist(fname,     "TopTag:mLt1")
+graphics.plotHist(fname,     "TopTag:mLt2")
+graphics.plotHist(fname,     "TopTag:dRLt12")
+graphics.plotHist(fname,     "TopTag:dRlepThad")
 graphics.plotHist(fname,     "TopTag:dRlephad")
-graphics.plotHist(fname,     "HarProcessTops:dRlep")
+graphics.plotHist(fname,     "TopTag:dRlep0had")
+graphics.plotHist(fname,     "TopTag:dRlep1had")
+graphics.plotHist(fname,     "TopTag:dRlep2had")
 graphics.plotHist(fname,     "HarProcessTops:dRhad")
-graphics.plotHist(fname,     "HarProcessTops:dpTRellep")
+graphics.plotHist(fname,     "HarProcessTops:dRlepT")
+graphics.plotHist(fname,     "HarProcessTops:dRlep")
+graphics.plotHist(fname,     "HarProcessTops:dRlep0")
+graphics.plotHist(fname,     "HarProcessTops:dRlep1")
+graphics.plotHist(fname,     "HarProcessTops:dRlep2")
 graphics.plotHist(fname,     "HarProcessTops:dpTRelhad")
-graphics.plotHist2(fname,    "TopTag:pTtLep","HarProcessTops:pTlep")
+graphics.plotHist(fname,     "HarProcessTops:dpTRellepT")
+graphics.plotHist(fname,     "HarProcessTops:dpTRellep")
+graphics.plotHist(fname,     "HarProcessTops:dpTRellep0")
+graphics.plotHist(fname,     "HarProcessTops:dpTRellep1")
+graphics.plotHist(fname,     "HarProcessTops:dpTRellep2")
 graphics.plotHist2(fname,    "TopTag:pTtHad","HarProcessTops:pThad")
-graphics.plotHist2(fname+")","TopTag:mtt","HarProcessTops:mtt")
+graphics.plotHist2(fname,    "TopTag:pTtTLep","HarProcessTops:pTlep")
+graphics.plotHist2(fname,    "TopTag:pTtLep","HarProcessTops:pTlep")
+graphics.plotHist2(fname,    "TopTag:pTtLep0","HarProcessTops:pTlep")
+graphics.plotHist2(fname,    "TopTag:pTtLep1","HarProcessTops:pTlep")
+graphics.plotHist2(fname,    "TopTag:pTtLep2","HarProcessTops:pTlep")
+graphics.plotHist2(fname,    "TopTag:mTtt","HarProcessTops:mtt")
+graphics.plotHist2(fname,    "TopTag:mtt","HarProcessTops:mtt")
+graphics.plotHist2(fname,    "TopTag:mtt0","HarProcessTops:mtt")
+graphics.plotHist2(fname,    "TopTag:mtt1","HarProcessTops:mtt")
+graphics.plotHist2(fname,    "TopTag:mtt2","HarProcessTops:mtt")
+graphics.plotHist(fname,     "HarProcessTops:dmRellepT")
+graphics.plotHist(fname,     "HarProcessTops:dmRellep")
+graphics.plotHist2D(fname,     "HarProcessTops:dpTRel:dRtru:had",True)
+graphics.plotHist2D(fname,     "HarProcessTops:dpTRel:dRtru:lepT",True)
+graphics.plotHist2D(fname+")", "HarProcessTops:dpTRel:dRtru:lep",True)
 print "=================================================== cutflow ==================================================="
+print "Processessed: ",n
 print cutflow
 print "==============================================================================================================="

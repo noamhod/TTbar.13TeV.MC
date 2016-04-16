@@ -1,3 +1,4 @@
+scp -p hod@lxplus.cern.ch:ttbar/README.md .
 scp -p hod@lxplus.cern.ch:ttbar/*.py .
 scp -p hod@lxplus.cern.ch:ttbar/*.sh .
 rm -f rcSetup.sh

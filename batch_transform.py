@@ -4,7 +4,7 @@ import os
 import subprocess
 import argparse
 parser = argparse.ArgumentParser(description='Read xAOD')
-parser.add_argument('-n', metavar='<process name>', required=True, help='The process name (lep / had)')
+parser.add_argument('-n', metavar='<process name>', required=True, help='The process name (lep / had / inc / el / mu)')
 parser.add_argument('-f', metavar='<process format>', required=True, help='The process format (TRUTH0 / TRUTH1)')
 args = parser.parse_args()
 name = args.n

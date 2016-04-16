@@ -287,7 +287,7 @@ for entry in xrange(t.GetEntries()):
    METphi = t.MET_Truth["NonInt"].phi()
    METx   = MET*math.cos(METphi)
    METy   = MET*math.sin(METphi)
-   v.SetPtEtaPhiE(MET,0.,METphi,MET)
+   v.SetPtEtaPhiM(MET,0.,METphi,0.)
    p4_MET.push_back(v)
 
    RunNumber[0] = t.EventInfo.runNumber()
