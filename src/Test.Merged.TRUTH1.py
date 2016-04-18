@@ -1,28 +1,36 @@
 #!/usr/bin/python
 import ROOT
-from ROOT import std, gROOT, gStyle, gPad, TCanvas, TH1, TH1D, TH2D, TLegend, TLine, TFile, TTree, TLorentzVector, TMath, TVirtualPad, TEventList, TVector2
+from ROOT import std, gROOT, gStyle, gPad, TCanvas, TH1, TH1D, TH2D, TLegend, TLine, TFile, TTree, TChain, TLorentzVector, TMath, TVirtualPad, TEventList, TVector2
+import sys
+sys.path.append('/Users/hod/GitHub/2HDM')
+import kinematics
+import THDM
 import os
 import math
 import subprocess
 import collections
 import rootstyle
-import graphics
+from graphics import Graphics
 from TTbarTagger import TTbarTagger
 from TTbarSelection import Jets, Leptons, HardProcessTops
 import argparse
 parser = argparse.ArgumentParser(description='Read xAOD')
 parser.add_argument('-n', metavar='<process name>', required=True, help='The process name [lep/had]')
 parser.add_argument('-r', metavar='<re-hadd ntupe>', required=True, help='Re-hadd ntuple ? [yes/no]')
+parser.add_argument('-a', metavar='<append weights>', required=True, help='Append 2HDM weights ? [yes/no]')
 args = parser.parse_args()
 name = args.n
 hadd = args.r
-print 'name : ',name
-print 're-hadd : ',hadd
+apnd = args.a
+print 'process name : ',name
+print 'redo hadd ? : ',hadd
+print 'append weights ? : ',apnd
 
 ROOT.gROOT.SetBatch(1)
 rootstyle.setStyle()
 
-path = "/afs/cern.ch/user/h/hod/data/MC/ttbar/ntup"
+path = ROOT.gSystem.ExpandPathName("$HOME/Downloads/tops")
+# path = "/afs/cern.ch/user/h/hod/data/MC/ttbar/ntup"
 fmerged = path+"/tops.SM.TRUTH1."+name+".merged.root"
 if(hadd=="yes"):
    p = subprocess.Popen("rm -f  "+path+"/tops.SM.TRUTH1."+name+".merged.root", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -33,9 +41,10 @@ if(hadd=="yes"):
 
 
 gROOT.LoadMacro( "src/Loader.C+" )
-
-tfile = TFile(path+"/tops.SM.TRUTH1."+name+".merged.root","READ")
-tree = tfile.Get("SM")
+# tfile = TFile(path+"/tops.SM.TRUTH1."+name+".merged.root","READ")
+# tree = tfile.Get("SM")
+tree = TChain("SM")
+tree.Add(path+"/tops.SM.TRUTH1."+name+".*.root")
 
 
 def mT(pLep,pMET):
@@ -57,6 +66,64 @@ def FillCutFlow(cut=""):
       if(key==cut): break
       c[key] += 1
 
+
+#### get the model
+type      = THDM.model.type
+sba       = THDM.model.sba
+mX        = THDM.model.mX
+nameX     = THDM.model.nameX
+cuts      = THDM.model.cuts
+mgpath    = THDM.model.mgpath
+alphaS    = THDM.model.alphaS
+nhel      = THDM.model.nhel
+libmatrix = "/Users/hod/GitHub/2HDM/matrix/"+nameX+"/"+str(mX)+"/"
+THDM.setParameters(nameX,mX,cuts,type,sba)
+THDM.setModules(libmatrix,nameX,len(THDM.parameters),"All")
+print THDM.modules
+
+
+
+### output tree
+Nk = tree.GetEntries()
+sNk = str(Nk/1000)+"k"
+wgt   = ROOT.std.vector("double")()
+tnb   = ROOT.std.vector("double")()
+wdtA  = ROOT.std.vector("double")()
+wdtH  = ROOT.std.vector("double")()
+ymt   = ROOT.std.vector("double")()
+ymb   = ROOT.std.vector("double")()
+ymc   = ROOT.std.vector("double")()
+ymtau = ROOT.std.vector("double")()
+ymmu  = ROOT.std.vector("double")()
+
+outFile = ""
+newFile = TFile()
+newtree = TTree()
+
+if(apnd=="yes"):
+   outFile = path+"/2HDM."+nameX+"."+str(mX)+"GeV.tree."+sNk+".root" 
+   newFile = TFile(outFile,"RECREATE") 
+   newtree = tree.CloneTree(0)
+   newtree.Branch("wgt",wgt)
+   newtree.Branch("tnb",tnb)
+   newtree.Branch("wdtA",wdtA)
+   newtree.Branch("wdtH",wdtH)
+   newtree.Branch("ymt",ymt)
+   newtree.Branch("ymb",ymb)
+   newtree.Branch("ymc",ymc)
+   newtree.Branch("ymtau",ymtau)
+   newtree.Branch("ymmu",ymmu)
+
+
+#### histograms, plotters etc.
+#### must be aware of the model properties
+graphics = Graphics()
+graphics.setModel(len(THDM.parameters),str(mX)+"GeV",nameX)
+graphics.bookHistos()
+
+
+
+#### begin runing over events
 n=1
 for event in tree:
 
@@ -64,16 +131,57 @@ for event in tree:
    if(n%10000==0):
       print "processed "+str(n)+", cutflow up to previous event:"
       print cutflow
-      
+   # if(n==10000): break
    n+=1
 
    ### define the hard process
    hardproc = HardProcessTops(event.id_tquarks,event.p4_tquarks,event.st_tquarks,event.id_tquarks_parents,event.p4_tquarks_parents,
                               event.id_wbosons,event.p4_wbosons,event.st_wbosons,event.id_wbosons_parents,event.p4_wbosons_parents,event.id_wbosons_children,event.p4_wbosons_children)
    id_tops  = hardproc.id_tops
+   p4_glus  = hardproc.p4_gluons
    p4_tops  = hardproc.p4_tops
    topdecay = hardproc.topdecay
 
+   #### beginning of 2HDM stuff
+   if(apnd=="yes"):
+      g1=p4_glus[0]
+      g2=p4_glus[1]
+      t1=p4_tops[0]
+      t2=p4_tops[1]
+      mtt = (t1+t2).M()
+      p = [[ g1.E(), g1.Px(), g1.Py(), g1.Pz() ],
+           [ g2.E(), g2.Px(), g2.Py(), g2.Pz() ],
+           [ t1.E(), t1.Px(), t1.Py(), t1.Pz() ],
+           [ t2.E(), t2.Px(), t2.Py(), t2.Pz() ]]
+      P=THDM.invert_momenta(p)
+      ## the ME^2 and the weight (once, not per tanb or similar)
+      me2SM = THDM.modules['matrix2SMpy'].get_me(P,alphaS,nhel)  ### calculate the SM ME^2
+      ### clear decoration branches
+      wgt.clear()
+      tnb.clear()
+      wdtA.clear()
+      wdtH.clear()
+      ymt.clear()
+      ymb.clear()
+      ymc.clear()
+      ymtau.clear()
+      ymmu.clear()
+      ### loop over all model points
+      for i in xrange(len(THDM.parameters)):
+         ## the ME^2 and the weight
+         me2XX = THDM.modules['matrix2'+nameX+str(i)+'py'].get_me(P,alphaS,nhel) ### calculate the X ME^2
+         weightX = me2XX/me2SM                                                   ### calculate the weight
+         wgt.push_back(weightX)
+         tnb.push_back(THDM.parameters[i].get("tanb"))
+         wdtA.push_back(THDM.parameters[i].get("wA"))
+         wdtH.push_back(THDM.parameters[i].get("wH"))
+         ymt.push_back(THDM.parameters[i].get("YMT"))
+         ymb.push_back(THDM.parameters[i].get("YMB"))
+         ymc.push_back(THDM.parameters[i].get("YMC"))
+         ymtau.push_back(THDM.parameters[i].get("YMTAU"))
+         ymmu.push_back(THDM.parameters[i].get("YMM"))
+      newtree.Fill()
+   #### end of 2HDM stuff
 
 
    ### define jets and b-jets
@@ -242,6 +350,14 @@ for event in tree:
       graphics.histos["TopTag:dRlep0had"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tl))
       graphics.histos["TopTag:dRlep1had"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tl1))
       graphics.histos["TopTag:dRlep2had"].Fill(ttTag.p4_t.DeltaR(ttTag.p4_tl2))
+
+      ### model histograms - "reco" level
+      for i in xrange(wgt.size()):
+         hname1 = "TopTag:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname2 = "TopTag:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         graphics.histos[hname1].Fill( (ttTag.p4_t+ttTag.p4_tl).M() ,wgt[i])
+         graphics.histos[hname2].Fill( (ttTag.p4_t+ttTag.p4_tl).M() ,wgt[i]-1.)
+
       ######## this is process specific ########
       if(len(p4_tops)==2 and len(topdecay)==2):
          itL = -1
@@ -269,10 +385,17 @@ for event in tree:
          graphics.histos["HarProcessTops:pThad"].Fill( p4_tops[itH].Pt() )
          graphics.histos["HarProcessTops:dmRellepT"].Fill( (ttTag.p4_t+ttTag.p4_tT).M()/(p4_tops[0]+p4_tops[1]).M()-1. )
          graphics.histos["HarProcessTops:dmRellep"].Fill( (ttTag.p4_t+ttTag.p4_tl).M()/(p4_tops[0]+p4_tops[1]).M()-1. )
-
          graphics.histos["HarProcessTops:dpTRel:dRtru:lepT"].Fill( ttTag.p4_tT.DeltaR(p4_tops[itL]) , ttTag.p4_tT.Pt()/p4_tops[itL].Pt()-1. )
          graphics.histos["HarProcessTops:dpTRel:dRtru:lep"].Fill( ttTag.p4_tl.DeltaR(p4_tops[itL]) , ttTag.p4_tl.Pt()/p4_tops[itL].Pt()-1. )
          graphics.histos["HarProcessTops:dpTRel:dRtru:had"].Fill( ttTag.p4_t.DeltaR(p4_tops[itH]) , ttTag.p4_t.Pt()/p4_tops[itH].Pt()-1. )
+
+         ### model histograms - hard process
+         for i in xrange(wgt.size()):
+            hname1 = "HarProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+            hname2 = "HarProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+            graphics.histos[hname1].Fill( (p4_tops[0]+p4_tops[1]).M() ,wgt[i])
+            graphics.histos[hname2].Fill( (p4_tops[0]+p4_tops[1]).M() ,wgt[i]-1.)
+	   
 
       else:
          print "Warning: hard process problem in event %i (EventNumber=%i and RunNumber=%i)" % (n,event.EventNumber,event.RunNumber)
@@ -282,9 +405,14 @@ for event in tree:
 
    ### end of events loop
 
+if(apnd=="yes"):
+   # use GetCurrentFile just in case we went over the
+   # (customizable) maximum file size
+   newtree.GetCurrentFile().Write() 
+   newtree.GetCurrentFile().Close()
+
 # plot everything
 fname = path+"/Test.TTree.TRUTH1."+name+".pdf"
-
 graphics.plotHist(fname+"(", "Muons:Mult")
 graphics.plotHist(fname,     "Muons:pT1",True)
 graphics.plotHist(fname,     "Muons:pT2",True)
@@ -361,6 +489,39 @@ graphics.plotHist(fname,     "HarProcessTops:dmRellep")
 graphics.plotHist2D(fname,     "HarProcessTops:dpTRel:dRtru:had",True)
 graphics.plotHist2D(fname,     "HarProcessTops:dpTRel:dRtru:lepT",True)
 graphics.plotHist2D(fname+")", "HarProcessTops:dpTRel:dRtru:lep",True)
+
+fname1 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.pdf"
+fname2 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.ratio.reconstructed.pdf"
+fname3 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.ratio.hardprocess.pdf"
+### model histograms
+tanbindices = {}
+for i in xrange(len(THDM.parameters)):
+   tanb = str(THDM.parameters[i].get("tanb"))
+   tanbindices.update({tanb:i})
+ihistos = collections.OrderedDict(sorted(tanbindices.items())).values()
+ii=0
+for i in ihistos:
+   name1 = "TopTag:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+   name1i = "TopTag:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+   name2 = "HarProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+   name2i = "HarProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+   name3 = "TopTag:mtt"
+   name4 = "HarProcessTops:mtt"
+   tanb = '%.2f' % THDM.parameters[i].get("tanb")
+   wX = THDM.parameters[i].get("w"+nameX)/mX*100
+   model = "m_{"+nameX+"}="+str(mX)+" GeV, tan#beta="+str(tanb)
+   suff = ""
+   if(ii==0):                        suff = "("
+   elif(ii==len(THDM.parameters)-1): suff = ")"
+   else:                             suff = ""
+   graphics.plotHist4(fname1+suff,model,name1,name2,name3,name4)
+   graphics.plotRatio(fname2+suff,'"Reconstructed" level tops',  name3,name1,name1i,wX,tanb,nameX,mX)
+   graphics.plotRatio(fname3+suff,"Hard-process level tops",     name4,name2,name2i,wX,tanb,nameX,mX)
+   ii += 1
+
+# hfname = path+"/histograms."+name+"."+nameX+".root"
+# graphics.writeHistos(hfname)
+
 print "=================================================== cutflow ==================================================="
 print "Processessed: ",n
 print cutflow

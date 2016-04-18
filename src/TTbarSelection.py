@@ -109,9 +109,6 @@ class HardProcessTops:
       self.p4_wbosons_children = p4_wbosons_children
 
       vtmp = TLorentzVector()
-      self.p4_gluons = []
-      self.p4_quarks = []
-      self.id_quarks = []
       self.p4_leptons = []
       self.id_leptons = []
 
@@ -119,14 +116,7 @@ class HardProcessTops:
       self.p4_tops  = []
       self.id_tops  = []
       self.topdecay = []
-
-      self.p4_g = []
-      # self.p4_q = []
-      # self.id_q = []
-      # self.p4_w = []
-      # self.id_w = []
-      # self.p4_l = []
-      # self.id_l = []
+      self.p4_gluons = []
 
       self.SetHardProcess()
       self.SetTopsDecay(0)
@@ -148,8 +138,9 @@ class HardProcessTops:
          self.id_tops.append(self.id_tquarks[j]) # tops
          self.p4_tops.append(self.p4_tquarks[j]) # tops
          if(self.id_tquarks_parents[j].size()==2):
-            self.p4_g.append( {len(self.id_tops)-1 : self.p4_tquarks_parents[j][0]} ) # gluons
-            self.p4_g.append( {len(self.id_tops)-1 : self.p4_tquarks_parents[j][1]} ) # gluons
+            if(len(self.p4_gluons)!=2):
+               self.p4_gluons.append( self.p4_tquarks_parents[j][0] ) # gluons
+               self.p4_gluons.append( self.p4_tquarks_parents[j][1] ) # gluons
             continue
          else:
             print "Error: too few top children: ",self.id_tquarks_parents[j].size()
