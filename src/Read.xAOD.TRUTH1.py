@@ -39,126 +39,180 @@ tree = TTree("SM","SM")
 p4_muons     = ROOT.vector(TLorentzVector)()
 id_muons     = ROOT.vector(int)()
 st_muons     = ROOT.vector(int)()
+bc_muons     = ROOT.vector(int)()
 p4_electrons = ROOT.vector(TLorentzVector)()
 id_electrons = ROOT.vector(int)()
 st_electrons = ROOT.vector(int)()
+bc_electrons = ROOT.vector(int)()
 
 p4_bquarks   = ROOT.vector(TLorentzVector)()
 id_bquarks   = ROOT.vector(int)()
 st_bquarks   = ROOT.vector(int)()
+bc_bquarks   = ROOT.vector(int)()
 p4_bquarks_parents  = ROOT.vector(ROOT.vector(TLorentzVector))()
 id_bquarks_parents  = ROOT.vector(ROOT.vector(int))()
+bc_bquarks_parents  = ROOT.vector(ROOT.vector(int))()
 p4_bquarks_children = ROOT.vector(ROOT.vector(TLorentzVector))()
 id_bquarks_children = ROOT.vector(ROOT.vector(int))()
+bc_bquarks_children = ROOT.vector(ROOT.vector(int))()
 
 p4_tquarks = ROOT.vector(TLorentzVector)()
 id_tquarks = ROOT.vector(int)()
 st_tquarks = ROOT.vector(int)()
+bc_tquarks = ROOT.vector(int)()
 p4_tquarks_parents  = ROOT.vector(ROOT.vector(TLorentzVector))()
 id_tquarks_parents  = ROOT.vector(ROOT.vector(int))()
+bc_tquarks_parents  = ROOT.vector(ROOT.vector(int))()
 p4_tquarks_children = ROOT.vector(ROOT.vector(TLorentzVector))()
 id_tquarks_children = ROOT.vector(ROOT.vector(int))()
+bc_tquarks_children = ROOT.vector(ROOT.vector(int))()
 
 p4_wbosons = ROOT.vector(TLorentzVector)()
 id_wbosons = ROOT.vector(int)()
 st_wbosons = ROOT.vector(int)()
+bc_wbosons = ROOT.vector(int)()
 p4_wbosons_parents  = ROOT.vector(ROOT.vector(TLorentzVector))()
 id_wbosons_parents  = ROOT.vector(ROOT.vector(int))()
+bc_wbosons_parents  = ROOT.vector(ROOT.vector(int))()
 p4_wbosons_children = ROOT.vector(ROOT.vector(TLorentzVector))()
 id_wbosons_children = ROOT.vector(ROOT.vector(int))()
+bc_wbosons_children = ROOT.vector(ROOT.vector(int))()
 
 p4_akt4jets  = ROOT.vector(TLorentzVector)()
-p4_akt4dRb   = ROOT.vector(float)()
 p4_MET       = ROOT.vector(TLorentzVector)()
 
 RunNumber = array( 'i', [ 0 ] )
 EventNumber = array( 'i', [ 0 ] )
 
-tree.Branch("p4_muons",p4_muons)
-tree.Branch("id_muons",id_muons)
-tree.Branch("st_muons",st_muons)
-tree.Branch("p4_electrons",p4_electrons)
-tree.Branch("id_electrons",id_electrons)
-tree.Branch("st_electrons",st_electrons)
-
 tree.Branch("p4_bquarks",p4_bquarks)
 tree.Branch("id_bquarks",id_bquarks)
 tree.Branch("st_bquarks",st_bquarks)
+tree.Branch("bc_bquarks",bc_bquarks)
 tree.Branch("p4_bquarks_parents",p4_bquarks_parents)
 tree.Branch("id_bquarks_parents",id_bquarks_parents)
+tree.Branch("bc_bquarks_parents",bc_bquarks_parents)
 tree.Branch("p4_bquarks_children",p4_bquarks_children)
 tree.Branch("id_bquarks_children",id_bquarks_children)
+tree.Branch("bc_bquarks_children",bc_bquarks_children)
 
 tree.Branch("p4_tquarks",p4_tquarks)
 tree.Branch("id_tquarks",id_tquarks)
 tree.Branch("st_tquarks",st_tquarks)
+tree.Branch("bc_tquarks",bc_tquarks)
 tree.Branch("p4_tquarks_parents",p4_tquarks_parents)
 tree.Branch("id_tquarks_parents",id_tquarks_parents)
+tree.Branch("bc_tquarks_parents",bc_tquarks_parents)
 tree.Branch("p4_tquarks_children",p4_tquarks_children)
 tree.Branch("id_tquarks_children",id_tquarks_children)
+tree.Branch("bc_tquarks_children",bc_tquarks_children)
 
 tree.Branch("p4_wbosons",p4_wbosons)
 tree.Branch("id_wbosons",id_wbosons)
 tree.Branch("st_wbosons",st_wbosons)
+tree.Branch("bc_wbosons",bc_wbosons)
 tree.Branch("p4_wbosons_parents",p4_wbosons_parents)
 tree.Branch("id_wbosons_parents",id_wbosons_parents)
+tree.Branch("bc_wbosons_parents",bc_wbosons_parents)
 tree.Branch("p4_wbosons_children",p4_wbosons_children)
 tree.Branch("id_wbosons_children",id_wbosons_children)
+tree.Branch("bc_wbosons_children",bc_wbosons_children)
+
+tree.Branch("p4_muons",p4_muons)
+tree.Branch("id_muons",id_muons)
+tree.Branch("st_muons",st_muons)
+tree.Branch("bc_muons",bc_muons)
+
+tree.Branch("p4_electrons",p4_electrons)
+tree.Branch("id_electrons",id_electrons)
+tree.Branch("st_electrons",st_electrons)
+tree.Branch("bc_electrons",bc_electrons)
 
 tree.Branch("p4_akt4jets",p4_akt4jets)
-tree.Branch("p4_akt4dRb",p4_akt4dRb)
+
 tree.Branch("p4_MET",p4_MET)
+
 tree.Branch("RunNumber",RunNumber,"RunNumber/I")
 tree.Branch("EventNumber",EventNumber,"EventNumber/I")
 
 
 def ClearVectors():
-   p4_muons.clear()
-   id_muons.clear()
-   st_muons.clear()
-   p4_electrons.clear()
-   id_electrons.clear()
-   st_electrons.clear()
+   ### b-quarks
    p4_bquarks.clear()
    id_bquarks.clear()
    st_bquarks.clear()
-   for i in xrange(p4_bquarks_parents.size()): p4_bquarks_parents[i].clear()
-   for i in xrange(id_bquarks_parents.size()): id_bquarks_parents[i].clear()
+   bc_bquarks.clear()
+   for i in xrange(p4_bquarks_parents.size()):
+      p4_bquarks_parents[i].clear()
+      id_bquarks_parents[i].clear()
+      bc_bquarks_parents[i].clear()
    p4_bquarks_parents.clear()
    id_bquarks_parents.clear()
-   for i in xrange(p4_bquarks_children.size()): p4_bquarks_children[i].clear()
-   for i in xrange(id_bquarks_children.size()): id_bquarks_children[i].clear()
+   bc_bquarks_parents.clear()
+   for i in xrange(p4_bquarks_children.size()):
+      p4_bquarks_children[i].clear()
+      id_bquarks_children[i].clear()
+      bc_bquarks_children[i].clear()
    p4_bquarks_children.clear()
    id_bquarks_children.clear()
+   bc_bquarks_children.clear()
+   ### t-quarks
    p4_tquarks.clear()
    id_tquarks.clear()
    st_tquarks.clear()
-   for i in xrange(p4_tquarks_parents.size()): p4_tquarks_parents[i].clear()
-   for i in xrange(id_tquarks_parents.size()): id_tquarks_parents[i].clear()
+   bc_tquarks.clear()
+   for i in xrange(p4_tquarks_parents.size()):
+      p4_tquarks_parents[i].clear()
+      id_tquarks_parents[i].clear()
+      bc_tquarks_parents[i].clear()
    p4_tquarks_parents.clear()
    id_tquarks_parents.clear()
-   for i in xrange(p4_tquarks_children.size()): p4_tquarks_children[i].clear()
-   for i in xrange(id_tquarks_children.size()): id_tquarks_children[i].clear()
+   bc_tquarks_parents.clear()
+   for i in xrange(p4_tquarks_children.size()):
+      p4_tquarks_children[i].clear()
+      id_tquarks_children[i].clear()
+      bc_tquarks_children[i].clear()
    p4_tquarks_children.clear()
    id_tquarks_children.clear()
+   bc_tquarks_children.clear()
+   ### W-bosons
    p4_wbosons.clear()
    id_wbosons.clear()
    st_wbosons.clear()
-   for i in xrange(p4_wbosons_parents.size()): p4_wbosons_parents[i].clear()
-   for i in xrange(id_wbosons_parents.size()): id_wbosons_parents[i].clear()
+   bc_wbosons.clear()
+   for i in xrange(p4_wbosons_parents.size()):
+      p4_wbosons_parents[i].clear()
+      id_wbosons_parents[i].clear()
+      bc_wbosons_parents[i].clear()
    p4_wbosons_parents.clear()
    id_wbosons_parents.clear()
-   for i in xrange(p4_wbosons_children.size()): p4_wbosons_children[i].clear()
-   for i in xrange(id_wbosons_children.size()): id_wbosons_children[i].clear()
+   bc_wbosons_parents.clear()
+   for i in xrange(p4_wbosons_children.size()):
+      p4_wbosons_children[i].clear()
+      id_wbosons_children[i].clear()
+      bc_wbosons_children[i].clear()
    p4_wbosons_children.clear()
    id_wbosons_children.clear()
-   p4_akt4jets.clear()
-   p4_akt4dRb.clear()
+   bc_wbosons_children.clear()
+
+   ### met
    p4_MET.clear()
+   ### muons
+   p4_muons.clear()
+   id_muons.clear()
+   st_muons.clear()
+   bc_muons.clear()
+   ### electrons
+   p4_electrons.clear()
+   id_electrons.clear()
+   st_electrons.clear()
+   bc_electrons.clear()
+   ### jets
+   p4_akt4jets.clear()
 
 
 p4_tmp = ROOT.vector(TLorentzVector)()
 id_tmp = ROOT.vector(int)()
+bc_tmp = ROOT.vector(int)()
 
 npassed = 0
 print( "Number of input events: %s" % t.GetEntries() )
@@ -168,144 +222,141 @@ for entry in xrange(t.GetEntries()):
 
    for i in xrange(t.TruthParticles.size()):
       p = t.TruthParticles.at(i)
-      ### get b-quarks with parents and children if id is different
+      ### get b-quarks with parents and children
       if(abs(p.pdgId())==5):
          v = TLorentzVector()
-         v.SetPxPyPzE(p.px()/1000,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
+         v.SetPxPyPzE(p.px()/1000.,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
          p4_bquarks.push_back(v)
          id_bquarks.push_back(p.pdgId())
          st_bquarks.push_back(p.status())
+         bc_bquarks.push_back(p.barcode())
          p4_bquarks_parents.push_back(p4_tmp)
          id_bquarks_parents.push_back(id_tmp)
+         bc_bquarks_parents.push_back(bc_tmp)
          p4_bquarks_children.push_back(p4_tmp)
          id_bquarks_children.push_back(id_tmp)
+         bc_bquarks_children.push_back(bc_tmp)
          if(p.hasProdVtx()):
             prodvtx = p.prodVtx()
             for j in xrange(prodvtx.nIncomingParticles()):
                parent = prodvtx.incomingParticle(j)
-               if(not parent):                continue
-               # if(parent.pdgId()==p.pdgId()): continue
-               v.SetPxPyPzE(parent.px()/1000,parent.py()/1000.,parent.pz()/1000.,parent.e()/1000.)
+               if(not parent): continue
+               v.SetPxPyPzE(parent.px()/1000.,parent.py()/1000.,parent.pz()/1000.,parent.e()/1000.)
                p4_bquarks_parents[p4_bquarks_parents.size()-1].push_back(v)
-               id_bquarks_parents[p4_bquarks_parents.size()-1].push_back(parent.pdgId())
+               id_bquarks_parents[id_bquarks_parents.size()-1].push_back(parent.pdgId())
+               bc_bquarks_parents[bc_bquarks_parents.size()-1].push_back(parent.barcode())
          if(p.hasDecayVtx()):
             decayvtx = p.decayVtx()
             for j in xrange(decayvtx.nOutgoingParticles()):
                child = decayvtx.outgoingParticle(j)
-               if(not child):                continue
-               # if(child.pdgId()==p.pdgId()): continue
-               v.SetPxPyPzE(child.px()/1000,child.py()/1000.,child.pz()/1000.,child.e()/1000.)
+               if(not child): continue
+               v.SetPxPyPzE(child.px()/1000.,child.py()/1000.,child.pz()/1000.,child.e()/1000.)
                p4_bquarks_children[p4_bquarks_children.size()-1].push_back(v)
-               id_bquarks_children[p4_bquarks_children.size()-1].push_back(child.pdgId())
-      ### get t-quarks with parents and children if id is different
+               id_bquarks_children[id_bquarks_children.size()-1].push_back(child.pdgId())
+               bc_bquarks_children[bc_bquarks_children.size()-1].push_back(child.barcode())
+      ### get t-quarks with parents and children
       if(abs(p.pdgId())==6):
          v = TLorentzVector()
-         v.SetPxPyPzE(p.px()/1000,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
+         v.SetPxPyPzE(p.px()/1000.,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
          p4_tquarks.push_back(v)
          id_tquarks.push_back(p.pdgId())
          st_tquarks.push_back(p.status())
+         bc_tquarks.push_back(p.barcode())
          p4_tquarks_parents.push_back(p4_tmp)
          id_tquarks_parents.push_back(id_tmp)
+         bc_tquarks_parents.push_back(bc_tmp)
          p4_tquarks_children.push_back(p4_tmp)
          id_tquarks_children.push_back(id_tmp)
+         bc_tquarks_children.push_back(bc_tmp)
          if(p.hasProdVtx()):
             prodvtx = p.prodVtx()
             for j in xrange(prodvtx.nIncomingParticles()):
                parent = prodvtx.incomingParticle(j)
-               if(not parent):                continue
-               # if(parent.pdgId()==p.pdgId()): continue
+               if(not parent): continue
                v.SetPxPyPzE(parent.px()/1000,parent.py()/1000.,parent.pz()/1000.,parent.e()/1000.)
                p4_tquarks_parents[p4_tquarks_parents.size()-1].push_back(v)
-               id_tquarks_parents[p4_tquarks_parents.size()-1].push_back(parent.pdgId())
+               id_tquarks_parents[id_tquarks_parents.size()-1].push_back(parent.pdgId())
+               bc_tquarks_parents[bc_tquarks_parents.size()-1].push_back(parent.barcode())
          if(p.hasDecayVtx()):
             decayvtx = p.decayVtx()
             for j in xrange(decayvtx.nOutgoingParticles()):
                child = decayvtx.outgoingParticle(j)
-               if(not child):                continue
-               # if(child.pdgId()==p.pdgId()): continue
+               if(not child): continue
                v.SetPxPyPzE(child.px()/1000,child.py()/1000.,child.pz()/1000.,child.e()/1000.)
                p4_tquarks_children[p4_tquarks_children.size()-1].push_back(v)
-               id_tquarks_children[p4_tquarks_children.size()-1].push_back(child.pdgId())
-      ### get W-bosons with parents and children if id is different
+               id_tquarks_children[id_tquarks_children.size()-1].push_back(child.pdgId())
+               bc_tquarks_children[bc_tquarks_children.size()-1].push_back(child.barcode())
+      ### get W-bosons with parents and children
       if(abs(p.pdgId())==24):
          v = TLorentzVector()
          v.SetPxPyPzE(p.px()/1000,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
          p4_wbosons.push_back(v)
          id_wbosons.push_back(p.pdgId())
          st_wbosons.push_back(p.status())
+         bc_wbosons.push_back(p.barcode())
          p4_wbosons_parents.push_back(p4_tmp)
          id_wbosons_parents.push_back(id_tmp)
+         bc_wbosons_parents.push_back(bc_tmp)
          p4_wbosons_children.push_back(p4_tmp)
          id_wbosons_children.push_back(id_tmp)
+         bc_wbosons_children.push_back(bc_tmp)
          if(p.hasProdVtx()):
             prodvtx = p.prodVtx()
             for j in xrange(prodvtx.nIncomingParticles()):
                parent = prodvtx.incomingParticle(j)
-               if(not parent):                continue
-               # if(parent.pdgId()==p.pdgId()): continue
-               v.SetPxPyPzE(parent.px()/1000,parent.py()/1000.,parent.pz()/1000.,parent.e()/1000.)
+               if(not parent): continue
+               v.SetPxPyPzE(parent.px()/1000.,parent.py()/1000.,parent.pz()/1000.,parent.e()/1000.)
                p4_wbosons_parents[p4_wbosons_parents.size()-1].push_back(v)
-               id_wbosons_parents[p4_wbosons_parents.size()-1].push_back(parent.pdgId())
+               id_wbosons_parents[id_wbosons_parents.size()-1].push_back(parent.pdgId())
+               bc_wbosons_parents[bc_wbosons_parents.size()-1].push_back(parent.barcode())
          if(p.hasDecayVtx()):
             decayvtx = p.decayVtx()
             for j in xrange(decayvtx.nOutgoingParticles()):
                child = decayvtx.outgoingParticle(j)
-               if(not child):                continue
-               # if(child.pdgId()==p.pdgId()): continue
-               v.SetPxPyPzE(child.px()/1000,child.py()/1000.,child.pz()/1000.,child.e()/1000.)
+               if(not child): continue
+               v.SetPxPyPzE(child.px()/1000.,child.py()/1000.,child.pz()/1000.,child.e()/1000.)
                p4_wbosons_children[p4_wbosons_children.size()-1].push_back(v)
-               id_wbosons_children[p4_wbosons_children.size()-1].push_back(child.pdgId())
+               id_wbosons_children[id_wbosons_children.size()-1].push_back(child.pdgId())
+               bc_wbosons_children[bc_wbosons_children.size()-1].push_back(child.barcode())
 
-
+   ### "reconstructed" objects
    for i in xrange(t.TruthMuons.size()):
       p = t.TruthMuons.at(i)
-      #if(p.status()!=1 or abs(p.eta())>2.5 or p.pt()/1000.<30.): continue
       v = TLorentzVector()
-      v.SetPxPyPzE(p.px()/1000,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
+      v.SetPxPyPzE(p.px()/1000.,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
       p4_muons.push_back(v)
       id_muons.push_back(p.pdgId())
       st_muons.push_back(p.status())
       pass # end for loop over truth particles collection
    for i in xrange(t.TruthElectrons.size()):
       p = t.TruthElectrons.at(i)
-      #if(p.status()!=1 or abs(p.eta())>2.5 or p.pt()/1000.<30.): continue
       v = TLorentzVector()
-      v.SetPxPyPzE(p.px()/1000,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
+      v.SetPxPyPzE(p.px()/1000.,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
       p4_electrons.push_back(v)
       id_electrons.push_back(p.pdgId())
       st_electrons.push_back(p.status())
       pass # end for loop over truth particles collection
    for i in xrange(t.AntiKt4TruthJets.size()):
       p = t.AntiKt4TruthJets.at(i)
-      #if(abs(p.eta())>2.5 or p.pt()/1000.<25.): continue
       v = TLorentzVector()
-      v.SetPtEtaPhiM(p.pt()/1000,p.eta(),p.phi(),p.m()/1000.)
+      # v.SetPtEtaPhiM(p.pt()/1000.,p.eta(),p.phi(),p.m()/1000.)
+      v.SetPxPyPzE(p.px()/1000.,p.Py()/1000.,p.Pz()/1000.,p.e()/1000.)
       p4_akt4jets.push_back(v)
       pass # end for loop over truth particles collection
-
-   MET    = t.MET_Truth["NonInt"].met()/1000
+   MET    = t.MET_Truth["NonInt"].met()/1000.
    METphi = t.MET_Truth["NonInt"].phi()
    METx   = MET*math.cos(METphi)
    METy   = MET*math.sin(METphi)
    v.SetPtEtaPhiM(MET,0.,METphi,0.)
    p4_MET.push_back(v)
 
-   RunNumber[0] = t.EventInfo.runNumber()
+   ### Event info
+   RunNumber[0]   = t.EventInfo.runNumber()
    EventNumber[0] = t.EventInfo.eventNumber()
 
-   '''
-   MWT = 0
-   if(p4_muons.size()==1):     MWT = math.sqrt(2*(p4_muons[0].Pt()*MET     - p4_muons[0].Px()*METx     - p4_muons[0].Py()*METy))
-   if(p4_electrons.size()==1): MWT = math.sqrt(2*(p4_electrons[0].Pt()*MET - p4_electrons[0].Px()*METx - p4_electrons[0].Py()*METy))
-
-   if(p4_muons.size()==1 or p4_electrons.size()==1): continue
-   if(p4_akt4jets.size()>=4):                        continue
-   if(p4_MET[0].E()>20.):                            continue
-   if(MET+MWT<60.):                                  continue
-   npassed = npassed+1
-   '''
-
-   tree.Fill()
+   ###############
+   tree.Fill() ###
+   ###############
 
    if(entry%1000==0):
       print("Processing run %i, event %i, entry %i" % ( t.EventInfo.runNumber(), t.EventInfo.eventNumber(), entry+1) )
