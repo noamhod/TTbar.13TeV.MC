@@ -1101,7 +1101,7 @@ for i in ihistos:
    graphics.plotRatio(fname3+suff,"Hard-process",       name_sm_hps,name_xx_hps,name_ix_hps,wX,tanb,sinba,nameX,mX)
    ii += 1
 
-hfname = path+"/histograms."+name+"."+nameX+".root"
+hfname = path+"/histograms."+name+"."+nameX+"."+str(mX)+"GeV.root"
 graphics.writeHistos(hfname)
 
 print "=================================================== cutflow ==================================================="
