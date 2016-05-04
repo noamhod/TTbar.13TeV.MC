@@ -39,7 +39,7 @@ class Jets:
    def TagBjets(self,st_bquarks,p4_bquarks):
       for i in self.ijets:
          for j in xrange(p4_bquarks.size()):
-            # if(st_bquarks[j]!=23):                      continue
+            # if(st_bquarks[j]!=23):                    continue
             if(st_bquarks[j]<60):                       continue
             if(self.jets[i].DeltaR(p4_bquarks[j])>0.4): continue
             self.btagged.update({self.jets[i].Pt() : i})

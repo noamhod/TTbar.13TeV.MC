@@ -340,7 +340,7 @@ for entry in xrange(t.GetEntries()):
       p = t.AntiKt4TruthJets.at(i)
       v = TLorentzVector()
       # v.SetPtEtaPhiM(p.pt()/1000.,p.eta(),p.phi(),p.m()/1000.)
-      v.SetPxPyPzE(p.px()/1000.,p.Py()/1000.,p.Pz()/1000.,p.e()/1000.)
+      v.SetPxPyPzE(p.px()/1000.,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
       p4_akt4jets.push_back(v)
       pass # end for loop over truth particles collection
    MET    = t.MET_Truth["NonInt"].met()/1000.

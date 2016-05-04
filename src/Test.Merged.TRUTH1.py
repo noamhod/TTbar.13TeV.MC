@@ -38,8 +38,9 @@ def mT(pLep,pMET):
 
 def WmassConstraint(lepton,etmis,wMass):
    mL = lepton.M()
-   dphi = lepton.Phi() - etmis.Phi()
-   A = (wMass*wMass-mL*mL)/2 + etmis.Pt()*lepton.Pt()*math.cos(dphi)
+   # dphi = lepton.Phi() - etmis.Phi()
+   # A = (wMass*wMass-mL*mL)/2. + etmis.Pt()*lepton.Pt()*math.cos(dphi)
+   A = (wMass*wMass-mL*mL)/2. + etmis.Px()*lepton.Px() + etmis.Py()*lepton.Py()
    a = math.pow(lepton.Pz(),2) - math.pow(lepton.E(),2)
    b = 2.*A*lepton.Pz()
    c = A*A - math.pow(etmis.Pt(),2)*math.pow(lepton.E(),2)
@@ -126,7 +127,7 @@ cutflow.append({"All":0})
 cutflow.append({"Muons.n=1":0})
 cutflow.append({"Electrons.n=0":0})
 cutflow.append({"Jets.n>3":0})
-cutflow.append({"Bjets.n>0":0})
+cutflow.append({"Bjets.n>1":0})
 cutflow.append({"ETmiss.eT>20":0})
 cutflow.append({"ETmiss.eT+ETmiss.mTW>60":0})
 def FillCutFlow(cut=""):
@@ -170,6 +171,7 @@ if(apnd=="yes"):
 
 
 #### begin runing over events
+nLepHad = 0
 nTruMatch_selected_objects = 0
 nTruMatch_before_selection = 0
 nTruMatch_after_selection  = 0
@@ -180,10 +182,11 @@ for event in tree:
    if(n%10000==0):
       print "processed "+str(n)+", cutflow up to previous event:"
       print cutflow
+      print "nLepHad =",nLepHad
       print "nTruMatch_before_selection =",nTruMatch_before_selection
       print "nTruMatch_after_selection  =",nTruMatch_after_selection
       print "nTruMatch_selected_objects =",nTruMatch_selected_objects
-   # if(n==50000): break
+   # if(n==20000): break
    n+=1
 
    ### define the hard process
@@ -218,13 +221,15 @@ for event in tree:
    tru_bH_decay = TLorentzVector() # hardproc.qB
 
    itP = [ hardproc.diagrams["t"]["t-production"], hardproc.diagrams["tbar"]["t-production"] ]
+   itR = [ hardproc.diagrams["t"]["t-radiation"],  hardproc.diagrams["tbar"]["t-radiation"]  ]
    itD = [ hardproc.diagrams["t"]["t-decay"],      hardproc.diagrams["tbar"]["t-decay"]      ]
-   ib  = [ hardproc.diagrams["t"]["b-production"], hardproc.diagrams["tbar"]["b-production"] ]
+   ibP = [ hardproc.diagrams["t"]["b-production"], hardproc.diagrams["tbar"]["b-production"] ]
+   ibR = [ hardproc.diagrams["t"]["b-radiation"],  hardproc.diagrams["tbar"]["b-radiation"]  ]
    ibD = [ hardproc.diagrams["t"]["b-decay"],      hardproc.diagrams["tbar"]["b-decay"]      ]
    iW  = [ hardproc.diagrams["t"]["W-decay"],      hardproc.diagrams["tbar"]["W-decay"]      ]
    if(abs(event.id_wbosons_children[iW[0]][0])>10):
-      tru_bL_prod = event.p4_bquarks[ib[0]]
-      tru_bH_prod = event.p4_bquarks[ib[1]]
+      tru_bL_prod = event.p4_bquarks[ibP[0]]
+      tru_bH_prod = event.p4_bquarks[ibP[1]]
       tru_bL_decay = event.p4_bquarks[ibD[0]]
       tru_bH_decay = event.p4_bquarks[ibD[1]]
       ## leptons
@@ -242,8 +247,8 @@ for event in tree:
          tru_qW    = event.p4.wbosons_children[iW[1]][1]
          tru_qbarW = event.p4.wbosons_children[iW[1]][0]
    else:
-      tru_bL_prod = event.p4_bquarks[ib[1]]
-      tru_bH_prod = event.p4_bquarks[ib[0]]
+      tru_bL_prod = event.p4_bquarks[ibP[1]]
+      tru_bH_prod = event.p4_bquarks[ibP[0]]
       tru_bL_decay = event.p4_bquarks[ibD[1]]
       tru_bH_decay = event.p4_bquarks[ibD[0]]
       ## leptons
@@ -261,6 +266,34 @@ for event in tree:
          tru_qW    = event.p4_wbosons_children[iW[0]][1]
          tru_qbarW = event.p4_wbosons_children[iW[0]][0]
    isLepHad = (abs(event.id_wbosons_children[iW[0]][0])<10 or abs(event.id_wbosons_children[iW[1]][0])<10)
+   ###############################
+   if(not isLepHad): continue ####
+   nLepHad += 1 ##################
+   ###############################
+
+   # ilephad = [-1,-1]
+   # if(abs(event.id_wbosons_children[iW[0]][0])>10): ilephad = ["lep","had"]
+   # else:                                            ilephad = ["had","lep"]
+   # if(itR[0]>-1):
+   #    print "t-radiation, ",ilephad[0]
+   #    print "  child1=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_tquarks_children[itR[0]][0], event.p4_tquarks_children[itR[0]][0].Pt(), event.p4_tquarks_children[itR[0]][0].Eta(), event.p4_tquarks_children[itR[0]][0].Phi(), event.p4_tquarks_children[itR[0]][0].E())
+   #    print "  child2=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_tquarks_children[itR[0]][1], event.p4_tquarks_children[itR[0]][1].Pt(), event.p4_tquarks_children[itR[0]][1].Eta(), event.p4_tquarks_children[itR[0]][1].Phi(), event.p4_tquarks_children[itR[0]][1].E())
+   #    print "   dR=",event.p4_tquarks_children[itR[0]][0].DeltaR(event.p4_tquarks_children[itR[0]][1])
+   # if(itR[1]>-1):
+   #    print "tbar-radiation, ",ilephad[1]
+   #    print "  child1=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_tquarks_children[itR[1]][0], event.p4_tquarks_children[itR[1]][0].Pt(), event.p4_tquarks_children[itR[1]][0].Eta(), event.p4_tquarks_children[itR[1]][0].Phi(), event.p4_tquarks_children[itR[1]][0].E())
+   #    print "  child2=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_tquarks_children[itR[1]][1], event.p4_tquarks_children[itR[1]][1].Pt(), event.p4_tquarks_children[itR[1]][1].Eta(), event.p4_tquarks_children[itR[1]][1].Phi(), event.p4_tquarks_children[itR[1]][1].E())
+   #    print "   dR=",event.p4_tquarks_children[itR[1]][0].DeltaR(event.p4_tquarks_children[itR[1]][1])
+   # if(ibR[0]>-1):
+   #    print "b-radiation (%g), ",ilephad[0]
+   #    print "  child1=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_bquarks_children[ibR[0]][0], event.p4_bquarks_children[ibR[0]][0].Pt(), event.p4_bquarks_children[ibR[0]][0].Eta(), event.p4_bquarks_children[ibR[0]][0].Phi(), event.p4_bquarks_children[ibR[0]][0].E())
+   #    print "  child2=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_bquarks_children[ibR[0]][1], event.p4_bquarks_children[ibR[0]][1].Pt(), event.p4_bquarks_children[ibR[0]][1].Eta(), event.p4_bquarks_children[ibR[0]][1].Phi(), event.p4_bquarks_children[ibR[0]][1].E())
+   #    print "   dR=",event.p4_bquarks_children[ibR[0]][0].DeltaR(event.p4_bquarks_children[ibR[0]][1])
+   # if(ibR[1]>-1):
+   #    print "bbar-radiation (%g), ",ilephad[1]
+   #    print "  child1=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_bquarks_children[ibR[1]][0], event.p4_bquarks_children[ibR[1]][0].Pt(), event.p4_bquarks_children[ibR[1]][0].Eta(), event.p4_bquarks_children[ibR[1]][0].Phi(), event.p4_bquarks_children[ibR[1]][0].E())
+   #    print "  child2=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_bquarks_children[ibR[1]][1], event.p4_bquarks_children[ibR[1]][1].Pt(), event.p4_bquarks_children[ibR[1]][1].Eta(), event.p4_bquarks_children[ibR[1]][1].Phi(), event.p4_bquarks_children[ibR[1]][1].E())
+   #    print "   dR=",event.p4_bquarks_children[ibR[1]][0].DeltaR(event.p4_bquarks_children[ibR[1]][1])
 
    #### beginning of 2HDM stuff
    ggProduction = True
@@ -305,144 +338,150 @@ for event in tree:
    #### end of 2HDM stuff
 
 
-   if(isLepHad):
-      graphics.histos["HardProcess:NoSelection:mjjjlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).M() )
-      graphics.histos["HardProcess:NoSelection:mjj"].Fill( (tru_qW+tru_qbarW).M() )
-      graphics.histos["HardProcess:NoSelection:mjj-mW"].Fill( (tru_qW+tru_qbarW).M()-hardproc.mW )
-      graphics.histos["HardProcess:NoSelection:mjjj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M() )
-      graphics.histos["HardProcess:NoSelection:mjjj-mt"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M()-hardproc.mt )
-      graphics.histos["HardProcess:NoSelection:mjjj-mjj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M() - (tru_qW+tru_qbarW).M() )
-      graphics.histos["HardProcess:NoSelection:mjjj-mjj-(mt-mW)"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M() - (tru_qW+tru_qbarW).M() - (hardproc.mt-hardproc.mW) )
-      graphics.histos["HardProcess:NoSelection:mlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod).M() )
-      graphics.histos["HardProcess:NoSelection:mlvj-mt"].Fill( (tru_mu+tru_nu+tru_bL_prod).M()-hardproc.mt )
-      graphics.histos["HardProcess:NoSelection:pTjjjlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).Pt() )
-      graphics.histos["HardProcess:NoSelection:pTjjj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).Pt() )
-      graphics.histos["HardProcess:NoSelection:pTlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod).Pt() )
-      graphics.histos["HardProcess:NoSelection:pTjjj-pTlvj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).Pt() - (tru_mu+tru_nu+tru_bL_prod).Pt() )
-      graphics.histos["HardProcess:NoSelection:dRlephad"].Fill( (tru_mu+tru_nu+tru_bL_prod).DeltaR(tru_qW+tru_qbarW+tru_bH_prod) )
-      graphics.histos["HardProcess:NoSelection:dRwbhad"].Fill( tru_bH_prod.DeltaR(tru_qW+tru_qbarW) )
-      graphics.histos["HardProcess:NoSelection:dRwblep"].Fill( tru_bL_prod.DeltaR(tru_mu+tru_nu) )
+   tru_pjj     = tru_qW   + tru_qbarW
+   tru_pjjj    = tru_pjj  + tru_bH_decay # tru_bH_prod
+   tru_plv     = tru_mu   + tru_nu
+   tru_plvj    = tru_plv  + tru_bL_decay # tru_bL_prod
+   tru_pjjjlvj = tru_pjjj + tru_plvj
+   truth = { "mjj":tru_pjj.M(), "mjjj":tru_pjj.M(), "pTjjj":tru_pjjj.Pt(),
+             "mlvj":tru_plvj.M(),"pTlvj":tru_plvj.Pt(),
+             "mjjjlvj":tru_pjjjlvj.M(),"pTjjjlvj":tru_pjjjlvj.Pt() }
+   
+   graphics.histos["HardProcess:NoSelection:mjjjlvj"].Fill( tru_pjjjlvj.M() )
+   graphics.histos["HardProcess:NoSelection:mjj"].Fill( tru_pjj.M() )
+   graphics.histos["HardProcess:NoSelection:mjj-mW"].Fill( tru_pjj.M()-hardproc.mW )
+   graphics.histos["HardProcess:NoSelection:mjjj"].Fill( tru_pjjj.M() )
+   graphics.histos["HardProcess:NoSelection:mjjj-mt"].Fill( tru_pjjj.M()-hardproc.mt )
+   graphics.histos["HardProcess:NoSelection:mjjj-mjj"].Fill( tru_pjjj.M() - tru_pjj.M() )
+   graphics.histos["HardProcess:NoSelection:mjjj-mjj-(mt-mW)"].Fill( tru_pjjj.M() - tru_pjj.M() - (hardproc.mt-hardproc.mW) )
+   graphics.histos["HardProcess:NoSelection:mlvj"].Fill( tru_plvj.M() )
+   graphics.histos["HardProcess:NoSelection:mlvj-mt"].Fill( tru_plvj.M()-hardproc.mt )
+   graphics.histos["HardProcess:NoSelection:pTjjjlvj"].Fill( tru_pjjjlvj.Pt() )
+   graphics.histos["HardProcess:NoSelection:pTjjj"].Fill( tru_pjjj.Pt() )
+   graphics.histos["HardProcess:NoSelection:pTlvj"].Fill( tru_plvj.Pt() )
+   graphics.histos["HardProcess:NoSelection:pTjjj-pTlvj"].Fill( tru_pjjj.Pt() - tru_plvj.Pt() )
+   graphics.histos["HardProcess:NoSelection:dRlephad"].Fill( tru_plvj.DeltaR(tru_pjjj) )
+   graphics.histos["HardProcess:NoSelection:dRwbhad"].Fill( tru_bH_decay.DeltaR(tru_pjj) ) #tru_bH_prod.DeltaR(tru_pjj)
+   graphics.histos["HardProcess:NoSelection:dRwblep"].Fill( tru_bL_decay.DeltaR(tru_plv) ) #tru_bL_prod.DeltaR(tru_plv)
+   ### model histograms - "reco" level
+   for i in xrange(wgt.size()):
+      hname1 = "HardProcess:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+      hname2 = "HardProcess:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+      hname3 = "HardProcess:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+      hname4 = "HardProcess:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+      hname5 = "HardProcess:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+      hname6 = "HardProcess:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+      graphics.histos[hname1].Fill(tru_pjjjlvj.M() ,wgt[i])
+      graphics.histos[hname2].Fill(tru_pjjjlvj.M() ,wgt[i]-1.)
+      graphics.histos[hname3].Fill(tru_pjjj.Pt() ,wgt[i])
+      graphics.histos[hname4].Fill(tru_pjjj.Pt() ,wgt[i]-1.)
+      graphics.histos[hname5].Fill(tru_plvj.Pt() ,wgt[i])
+      graphics.histos[hname6].Fill(tru_plvj.Pt() ,wgt[i]-1.)
+   
+          
+   
+   #### best match without selection
+   dRmatch = 0.4
+   dPhimatch = 1.0
+   matches_before_selection = {"mu":-1,"nu":-1,"bL":-1,"qW":-1,"qbarW":-1,"bH":-1}
+   drmin = 100
+   for j in xrange(len(event.p4_akt4jets)):
+      # dr = event.p4_akt4jets[j].DeltaR(tru_bL_prod)
+      dr = event.p4_akt4jets[j].DeltaR(tru_bL_decay)
+      if(dr<drmin and dr<dRmatch):# and j not in matches_before_selection.values()):
+         matches_before_selection["bL"] = j
+         drmin = dr
+   drmin = 100
+   for j in xrange(len(event.p4_akt4jets)):
+      dr = event.p4_akt4jets[j].DeltaR(tru_qW)
+      if(dr<drmin and dr<dRmatch):# and j not in matches_before_selection.values()):
+         matches_before_selection["qW"] = j
+         drmin = dr
+   drmin = 100
+   for j in xrange(len(event.p4_akt4jets)):
+      dr = event.p4_akt4jets[j].DeltaR(tru_qbarW)
+      if(dr<drmin and dr<dRmatch):# and j not in matches_before_selection.values()):
+         matches_before_selection["qbarW"] = j
+         drmin = dr
+   drmin = 100
+   for j in xrange(len(event.p4_akt4jets)):
+      # dr = event.p4_akt4jets[j].DeltaR(tru_bH_prod)
+      dr = event.p4_akt4jets[j].DeltaR(tru_bH_decay)
+      if(dr<drmin and dr<dRmatch):# and j not in matches_before_selection.values()):
+         matches_before_selection["bH"] = j
+         drmin = dr
+   drmin = 100
+   for j in xrange(len(event.p4_muons)):
+      dr = event.p4_muons[j].DeltaR(tru_mu)
+      if(dr<drmin and dr<dRmatch):
+         matches_before_selection["mu"] = j
+         drmin = dr
+   ## the neutrino
+   nu1,nu2 = SetPzNu(event.p4_muons[matches_before_selection["mu"]],event.p4_MET[0])
+   nu0 = TLorentzVector()
+   if(nu1.DeltaR(tru_nu)<nu2.DeltaR(tru_nu)): nu0 = nu1
+   else:                                      nu0 = nu2
+   if(abs(nu0.DeltaPhi(tru_nu))<dPhimatch): matches_before_selection["nu"] = 1
+   ### count matches
+   nmatched_before_selection = 0
+   for key, index in matches_before_selection.iteritems():
+      if(index>=0):  nmatched_before_selection  += 1
+   if(nmatched_before_selection==6): nTruMatch_before_selection += 1
+   
+   if(nmatched_before_selection==6):
+      mu = matches_before_selection["mu"]
+      j1 = matches_before_selection["qW"]
+      j2 = matches_before_selection["qbarW"]
+      j3 = matches_before_selection["bH"]
+      j4 = matches_before_selection["bL"]
+      pv = nu0
+      pl  = event.p4_muons[mu]
+      pj1 = event.p4_akt4jets[j1]
+      pj2 = event.p4_akt4jets[j2]
+      pj3 = event.p4_akt4jets[j3]
+      pj4 = event.p4_akt4jets[j4]
+      mlvj  = (pl+pv+pj4).M()
+      mlv   = (pl+pv).M()
+      mjj   = (pj1+pj2).M()
+      mjjj  = (pj1+pj2+pj3).M()
+      pTjjj = (pj1+pj2+pj3).Pt()
+      pTlvj = (pl+pv+pj4).Pt()
+      mjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).M()
+      pTjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).Pt()
+      dRlephad = (pl+pv+pj4).DeltaR(pj1+pj2+pj3)
+      dRwbhad  = (pj1+pj2).DeltaR(pj3)
+      dRwblep  = (pl+pv).DeltaR(pj4)
+   
+      graphics.histos["Matched:NoSelection:mjjjlvj"].Fill(mjjjlvj)
+      graphics.histos["Matched:NoSelection:mjj"].Fill(mjj)
+      graphics.histos["Matched:NoSelection:mjj-mW"].Fill(mjj-hardproc.mW)
+      graphics.histos["Matched:NoSelection:mjjj"].Fill(mjjj)
+      graphics.histos["Matched:NoSelection:mjjj-mt"].Fill(mjjj-hardproc.mt)
+      graphics.histos["Matched:NoSelection:mjjj-mjj"].Fill(mjjj-mjj)
+      graphics.histos["Matched:NoSelection:mjjj-mjj-(mt-mW)"].Fill(mjjj-mjj-(hardproc.mt-hardproc.mW))
+      graphics.histos["Matched:NoSelection:mlvj"].Fill(mlvj)
+      graphics.histos["Matched:NoSelection:mlvj-mt"].Fill(mlvj-hardproc.mt)
+      graphics.histos["Matched:NoSelection:pTjjjlvj"].Fill(pTjjjlvj)
+      graphics.histos["Matched:NoSelection:pTjjj"].Fill(pTjjj)
+      graphics.histos["Matched:NoSelection:pTlvj"].Fill(pTlvj)
+      graphics.histos["Matched:NoSelection:pTjjj-pTlvj"].Fill(pTjjj-pTlvj)
+      graphics.histos["Matched:NoSelection:dRlephad"].Fill(dRlephad)
+      graphics.histos["Matched:NoSelection:dRwbhad"].Fill(dRwbhad)
+      graphics.histos["Matched:NoSelection:dRwblep"].Fill(dRwblep)
       ### model histograms - "reco" level
       for i in xrange(wgt.size()):
-         hname1 = "HardProcess:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-         hname2 = "HardProcess:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-         hname3 = "HardProcess:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-         hname4 = "HardProcess:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-         hname5 = "HardProcess:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-         hname6 = "HardProcess:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-         graphics.histos[hname1].Fill((tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).M() ,wgt[i])
-         graphics.histos[hname2].Fill((tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).M() ,wgt[i]-1.)
-         graphics.histos[hname3].Fill((tru_qW+tru_qbarW+tru_bH_prod).Pt() ,wgt[i])
-         graphics.histos[hname4].Fill((tru_qW+tru_qbarW+tru_bH_prod).Pt() ,wgt[i]-1.)
-         graphics.histos[hname5].Fill((tru_mu+tru_nu+tru_bL_prod).Pt() ,wgt[i])
-         graphics.histos[hname6].Fill((tru_mu+tru_nu+tru_bL_prod).Pt() ,wgt[i]-1.)
-
-             
-
-      #### best match without selection
-      dRmatch = 0.4
-      dPhimatch = 1.0
-      matches_before_selection = {"mu":-1,"nu":-1,"bL":-1,"qW":-1,"qbarW":-1,"bH":-1}
-      drmin = 100
-      for j in xrange(len(event.p4_akt4jets)):
-         # dr = event.p4_akt4jets[j].DeltaR(tru_bL_prod)
-         dr = event.p4_akt4jets[j].DeltaR(tru_bL_decay)
-         if(dr<drmin and dr<dRmatch and j not in matches_before_selection.values()):
-            matches_before_selection["bL"] = j
-            drmin = dr
-      drmin = 100
-      for j in xrange(len(event.p4_akt4jets)):
-         dr = event.p4_akt4jets[j].DeltaR(tru_qW)
-         if(dr<drmin and dr<dRmatch and j not in matches_before_selection.values()):
-            matches_before_selection["qW"] = j
-            drmin = dr
-      drmin = 100
-      for j in xrange(len(event.p4_akt4jets)):
-         dr = event.p4_akt4jets[j].DeltaR(tru_qbarW)
-         if(dr<drmin and dr<dRmatch and j not in matches_before_selection.values()):
-            matches_before_selection["qbarW"] = j
-            drmin = dr
-      drmin = 100
-      for j in xrange(len(event.p4_akt4jets)):
-         # dr = event.p4_akt4jets[j].DeltaR(tru_bH_prod)
-         dr = event.p4_akt4jets[j].DeltaR(tru_bH_decay)
-         if(dr<drmin and dr<dRmatch and j not in matches_before_selection.values()):
-            matches_before_selection["bH"] = j
-            drmin = dr
-      drmin = 100
-      for j in xrange(len(event.p4_muons)):
-         dr = event.p4_muons[j].DeltaR(tru_mu)
-         if(dr<drmin and dr<dRmatch):
-            matches_before_selection["mu"] = j
-            drmin = dr
-      ## the neutrino
-      nu1,nu2 = SetPzNu(event.p4_muons[matches_before_selection["mu"]],event.p4_MET[0])
-      nu0 = TLorentzVector()
-      if(nu1.DeltaR(tru_nu)<nu2.DeltaR(tru_nu)): nu0 = nu1
-      else:                                      nu0 = nu2
-      # if(nu0.DeltaR(tru_nu)<dRmatch): matches_before_selection["nu"] = 1
-      if(abs(nu0.DeltaPhi(tru_nu))<dPhimatch): matches_before_selection["nu"] = 1
-      ### count matches
-      nmatched_before_selection = 0
-      for key, index in matches_before_selection.iteritems():
-         if(index>=0):  nmatched_before_selection  += 1
-      if(nmatched_before_selection==6): nTruMatch_before_selection += 1
-   
-      if(nmatched_before_selection==6):
-         mu = matches_before_selection["mu"]
-         j1 = matches_before_selection["qW"]
-         j2 = matches_before_selection["qbarW"]
-         j3 = matches_before_selection["bH"]
-         j4 = matches_before_selection["bL"]
-         pv = nu0
-         pl  = event.p4_muons[mu]
-         pj1 = event.p4_akt4jets[j1]
-         pj2 = event.p4_akt4jets[j2]
-         pj3 = event.p4_akt4jets[j3]
-         pj4 = event.p4_akt4jets[j4]
-         mlvj  = (pl+pv+pj4).M()
-         mlv   = (pl+pv).M()
-         mjj   = (pj1+pj2).M()
-         mjjj  = (pj1+pj2+pj3).M()
-         pTjjj = (pj1+pj2+pj3).Pt()
-         pTlvj = (pl+pv+pj4).Pt()
-         pTtt  = (pj1+pj2+pj3+pl+pv+pj4).Pt()
-         mjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).M()
-         pTjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).Pt()
-         dRlephad = (pl+pv+pj4).DeltaR(pj1+pj2+pj3)
-         dRwbhad  = (pj1+pj2).DeltaR(pj3)
-         dRwblep  = (pl+pv).DeltaR(pj4)
-   
-         graphics.histos["Matched:NoSelection:mjjjlvj"].Fill(mjjjlvj)
-         graphics.histos["Matched:NoSelection:mjj"].Fill(mjj)
-         graphics.histos["Matched:NoSelection:mjj-mW"].Fill(mjj-hardproc.mW)
-         graphics.histos["Matched:NoSelection:mjjj"].Fill(mjjj)
-         graphics.histos["Matched:NoSelection:mjjj-mt"].Fill(mjjj-hardproc.mt)
-         graphics.histos["Matched:NoSelection:mjjj-mjj"].Fill(mjjj-mjj)
-         graphics.histos["Matched:NoSelection:mjjj-mjj-(mt-mW)"].Fill(mjjj-mjj-(hardproc.mt-hardproc.mW))
-         graphics.histos["Matched:NoSelection:mlvj"].Fill(mlvj)
-         graphics.histos["Matched:NoSelection:mlvj-mt"].Fill(mlvj-hardproc.mt)
-         graphics.histos["Matched:NoSelection:pTjjjlvj"].Fill(pTjjjlvj)
-         graphics.histos["Matched:NoSelection:pTjjj"].Fill(pTjjj)
-         graphics.histos["Matched:NoSelection:pTlvj"].Fill(pTlvj)
-         graphics.histos["Matched:NoSelection:pTjjj-pTlvj"].Fill(pTjjj-pTlvj)
-         graphics.histos["Matched:NoSelection:dRlephad"].Fill(dRlephad)
-         graphics.histos["Matched:NoSelection:dRwbhad"].Fill(dRwbhad)
-         graphics.histos["Matched:NoSelection:dRwblep"].Fill(dRwblep)
-         ### model histograms - "reco" level
-         for i in xrange(wgt.size()):
-            hname1 = "Matched:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-            hname2 = "Matched:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-            hname3 = "Matched:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-            hname4 = "Matched:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-            hname5 = "Matched:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-            hname6 = "Matched:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-            graphics.histos[hname1].Fill(mjjjlvj ,wgt[i])
-            graphics.histos[hname2].Fill(mjjjlvj ,wgt[i]-1.)
-            graphics.histos[hname3].Fill(pTjjj ,wgt[i])
-            graphics.histos[hname4].Fill(pTjjj ,wgt[i]-1.)
-            graphics.histos[hname5].Fill(pTlvj ,wgt[i])
-            graphics.histos[hname6].Fill(pTlvj ,wgt[i]-1.)
+         hname1 = "Matched:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname2 = "Matched:NoSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         hname3 = "Matched:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname4 = "Matched:NoSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         hname5 = "Matched:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname6 = "Matched:NoSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         graphics.histos[hname1].Fill(mjjjlvj ,wgt[i])
+         graphics.histos[hname2].Fill(mjjjlvj ,wgt[i]-1.)
+         graphics.histos[hname3].Fill(pTjjj ,wgt[i])
+         graphics.histos[hname4].Fill(pTjjj ,wgt[i]-1.)
+         graphics.histos[hname5].Fill(pTlvj ,wgt[i])
+         graphics.histos[hname6].Fill(pTlvj ,wgt[i]-1.)
 
 
 
@@ -508,8 +547,8 @@ for event in tree:
    if(len(jets)<4):
       FillCutFlow("Jets.n>3")
       continue
-   if(len(bjets)<1):
-      FillCutFlow("Bjets.n>0")
+   if(len(bjets)<2):
+      FillCutFlow("Bjets.n>1")
       continue
    if(event.p4_MET[0].Pt()<20):
       FillCutFlow("ETmiss.eT>20")
@@ -574,21 +613,21 @@ for event in tree:
       for j in jets:
          # dr = event.p4_akt4jets[j].DeltaR(tru_bL_prod)
          dr = event.p4_akt4jets[j].DeltaR(tru_bL_decay)
-         if(dr<drmin and j not in matches_after_selection.values()):
+         if(dr<drmin):# and j not in matches_after_selection.values()):
             if(dr<dRmatch): matches_after_selection["bL"] = j
             drmin = dr
       drmatches_after_selection["bL"] = drmin
       drmin = 100
       for j in jets:
          dr = event.p4_akt4jets[j].DeltaR(tru_qW)
-         if(dr<drmin and j not in matches_after_selection.values()):
+         if(dr<drmin):# and j not in matches_after_selection.values()):
             if(dr<dRmatch): matches_after_selection["qW"] = j
             drmin = dr
       drmatches_after_selection["qW"] = drmin
       drmin = 100
       for j in jets:
          dr = event.p4_akt4jets[j].DeltaR(tru_qbarW)
-         if(dr<drmin and j not in matches_after_selection.values()):
+         if(dr<drmin):# and j not in matches_after_selection.values()):
             if(dr<dRmatch): matches_after_selection["qbarW"] = j
             drmin = dr
       drmatches_after_selection["qbarW"] = drmin
@@ -596,7 +635,7 @@ for event in tree:
       for j in jets:
          # dr = event.p4_akt4jets[j].DeltaR(tru_bH_prod)
          dr = event.p4_akt4jets[j].DeltaR(tru_bH_decay)
-         if(dr<drmin and j not in matches_after_selection.values()):
+         if(dr<drmin):# and j not in matches_after_selection.values()):
             if(dr<dRmatch): matches_after_selection["bH"] = j
             drmin = dr
       drmatches_after_selection["bH"] = drmin
@@ -612,19 +651,22 @@ for event in tree:
       nu0 = TLorentzVector()
       if(nu1.DeltaR(tru_nu)<nu2.DeltaR(tru_nu)): nu0 = nu1
       else:                                      nu0 = nu2
-      # if(abs(nu1.Pz())<abs(nu2.Pz())): nu0 = nu1
-      # else:                            nu0 = nu2
       dphi = abs(nu0.DeltaPhi(tru_nu))
-      # dr = nu0.DeltaR(tru_nu)
       if(dphi<dPhimatch): matches_after_selection["nu"] = 1
-      # if(dr<dRmatch): matches_after_selection["nu"] = 1
       drmatches_after_selection["nu"] = dphi
-      # drmatches_after_selection["nu"] = dr
       
       ### count matches_after_selection
       nmatched_after_selection = 0
       for key, index in matches_after_selection.iteritems():
-         if(index>=0):  nmatched_after_selection  += 1
+         if(index>=0): nmatched_after_selection  += 1
+
+      graphics.histos["BestMatching:dR:mu"].Fill(drmatches_after_selection["mu"])
+      graphics.histos["BestMatching:dR:nu"].Fill(drmatches_after_selection["nu"])
+      graphics.histos["BestMatching:dR:bL"].Fill(drmatches_after_selection["bL"])
+      graphics.histos["BestMatching:dR:q"].Fill(drmatches_after_selection["qW"])
+      graphics.histos["BestMatching:dR:qbar"].Fill(drmatches_after_selection["qbarW"])
+      graphics.histos["BestMatching:dR:bH"].Fill(drmatches_after_selection["bH"])      
+
       if(nmatched_after_selection==6):
          nTruMatch_after_selection += 1
          mu = matches_after_selection["mu"]
@@ -644,7 +686,6 @@ for event in tree:
          mjjj  = (pj1+pj2+pj3).M()
          pTjjj = (pj1+pj2+pj3).Pt()
          pTlvj = (pl+pv+pj4).Pt()
-         pTtt  = (pj1+pj2+pj3+pl+pv+pj4).Pt()
          mjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).M()
          pTjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).Pt()
          dRlephad = (pl+pv+pj4).DeltaR(pj1+pj2+pj3)
@@ -688,6 +729,8 @@ for event in tree:
       j2 = ttTag.configurations[ibestconf]["j2"]
       j3 = ttTag.configurations[ibestconf]["j3"]
       j4 = ttTag.configurations[ibestconf]["j4"]
+      j3a = ttTag.configurations[ibestconf]["j3a"]
+      j4a = ttTag.configurations[ibestconf]["j4a"]
       pv = TLorentzVector()
       if(nv==0): pv = ttTag.p4_nu1
       else:      pv = ttTag.p4_nu2
@@ -696,22 +739,25 @@ for event in tree:
       pj2 = ttTag.jets[j2]
       pj3 = ttTag.jets[j3]
       pj4 = ttTag.jets[j4]
-      mlvj  = (pl+pv+pj4).M()
+      ptH   = pj1+pj2+pj3
+      if(j3a>-1): ptH = ptH+ttTag.jets[j3a]
+      ptL   = pl+pv+pj4
+      if(j4a>-1): ptL = ptL+ttTag.jets[j4a]
+      mlvj  = ptL.M()
       mlv   = (pl+pv).M()
       mjj   = (pj1+pj2).M()
-      mjjj  = (pj1+pj2+pj3).M()
-      pTjjj = (pj1+pj2+pj3).Pt()
-      pTlvj = (pl+pv+pj4).Pt()
-      pTtt  = (pj1+pj2+pj3+pl+pv+pj4).Pt()
-      mjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).M()
-      pTjjjlvj = (pj1+pj2+pj3+pl+pv+pj4).Pt()
-      dRlephad = (pl+pv+pj4).DeltaR(pj1+pj2+pj3)
+      mjjj  = ptH.M()
+      pTjjj = ptH.Pt()
+      pTlvj = ptL.Pt()
+      mjjjlvj = (ptL+ptH).M()
+      pTjjjlvj = (ptL+ptH).Pt()
+      dRlephad = ptL.DeltaR(ptH)
       dRwbhad  = (pj1+pj2).DeltaR(pj3)
       dRwblep  = (pl+pv).DeltaR(pj4)
       ### for parton-level matching
       rec_mu = pl
       rec_nu = pv
-      rec_j4  = pj4
+      rec_j4 = pj4
       rec_j1 = pj1
       rec_j2 = pj2
       rec_j3 = pj3
@@ -719,13 +765,13 @@ for event in tree:
       matching = {"tlep.mu":0, "tlep.nu":0, "tlep.j4":0, "thad.j1":0, "thad.j2":0, "thad.j3":0}
       if(rec_mu.DeltaR(tru_mu)<dRmatch):                                     matching["tlep.mu"] = 1
       if(abs(rec_nu.DeltaPhi(tru_nu))<dPhimatch):                            matching["tlep.nu"] = 1
-      # if(rec_nu.DeltaR(tru_nu)<dRmatch):                                     matching["tlep.nu"] = 1
-      # if(rec_j4.DeltaR(tru_bL_prod)<dRmatch):                                     matching["tlep.j4"] = 1
-      if(rec_j4.DeltaR(tru_qW)<dRmatch or rec_j4.DeltaR(tru_qbarW)<dRmatch or rec_j4.DeltaR(tru_bH_decay)<dRmatch or rec_j4.DeltaR(tru_bL_decay)<dRmatch):                                     matching["tlep.j4"] = 1
+      # if(rec_nu.DeltaR(tru_nu)<dRmatch):                                   matching["tlep.nu"] = 1
+      # if(rec_j4.DeltaR(tru_bL_prod)<dRmatch):                              matching["tlep.j4"] = 1
+      if(rec_j4.DeltaR(tru_qW)<dRmatch or rec_j4.DeltaR(tru_qbarW)<dRmatch or rec_j4.DeltaR(tru_bH_decay)<dRmatch or rec_j4.DeltaR(tru_bL_decay)<dRmatch): matching["tlep.j4"] = 1
       if(rec_j1.DeltaR(tru_qW)<dRmatch or rec_j1.DeltaR(tru_qbarW)<dRmatch or rec_j1.DeltaR(tru_bH_decay)<dRmatch or rec_j1.DeltaR(tru_bL_decay)<dRmatch): matching["thad.j1"] = 1
       if(rec_j2.DeltaR(tru_qW)<dRmatch or rec_j2.DeltaR(tru_qbarW)<dRmatch or rec_j2.DeltaR(tru_bH_decay)<dRmatch or rec_j2.DeltaR(tru_bL_decay)<dRmatch): matching["thad.j2"] = 1
-      # if(rec_j3.DeltaR(tru_bH_prod)<dRmatch):                                     matching["thad.j3"] = 1
-      if(rec_j3.DeltaR(tru_qW)<dRmatch or rec_j3.DeltaR(tru_qbarW)<dRmatch or rec_j3.DeltaR(tru_bH_decay)<dRmatch or rec_j3.DeltaR(tru_bL_decay)<dRmatch):                                     matching["thad.j3"] = 1
+      # if(rec_j3.DeltaR(tru_bH_prod)<dRmatch):                              matching["thad.j3"] = 1
+      if(rec_j3.DeltaR(tru_qW)<dRmatch or rec_j3.DeltaR(tru_qbarW)<dRmatch or rec_j3.DeltaR(tru_bH_decay)<dRmatch or rec_j3.DeltaR(tru_bL_decay)<dRmatch): matching["thad.j3"] = 1
       for key, flag in matching.iteritems():
          nmatched += flag
       
@@ -739,52 +785,82 @@ for event in tree:
       # if(nmatched==6):                 print " --> fully matched"
       # else:                            print " --> NOT matched"
       # print ""
-   
+
       graphics.histos["Matching:dR:mu"].Fill(rec_mu.DeltaR(tru_mu))
       graphics.histos["Matching:dR:nu"].Fill(rec_nu.DeltaR(tru_nu))
-      graphics.histos["Matching:dR:b"].Fill(rec_j4.DeltaR(tru_bL_prod))
-      graphics.histos["Matching:dR:j1q"].Fill(rec_j1.DeltaR(tru_qW))
-      graphics.histos["Matching:dR:j1qbar"].Fill(rec_j1.DeltaR(tru_qbarW))
-      graphics.histos["Matching:dR:j2q"].Fill(rec_j2.DeltaR(tru_qW))
-      graphics.histos["Matching:dR:j2qbar"].Fill(rec_j2.DeltaR(tru_qbarW))
-      graphics.histos["Matching:dR:j3"].Fill(rec_j3.DeltaR(tru_bH_prod))
-   
-      if(isLepHad):
-         graphics.histos["HardProcess:WithSelection:mjjjlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).M() )
-         graphics.histos["HardProcess:WithSelection:mjj"].Fill( (tru_qW+tru_qbarW).M() )
-         graphics.histos["HardProcess:WithSelection:mjj-mW"].Fill( (tru_qW+tru_qbarW).M()-hardproc.mW )
-         graphics.histos["HardProcess:WithSelection:mjjj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M() )
-         graphics.histos["HardProcess:WithSelection:mjjj-mt"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M()-hardproc.mt )
-         graphics.histos["HardProcess:WithSelection:mjjj-mjj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M() - (tru_qW+tru_qbarW).M())
-         graphics.histos["HardProcess:WithSelection:mjjj-mjj-(mt-mW)"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).M() - (tru_qW+tru_qbarW).M() - (hardproc.mt-hardproc.mW))
-         graphics.histos["HardProcess:WithSelection:mlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod).M() )
-         graphics.histos["HardProcess:WithSelection:mlvj-mt"].Fill( (tru_mu+tru_nu+tru_bL_prod).M() - hardproc.mt )
-         graphics.histos["HardProcess:WithSelection:pTjjjlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).Pt() )
-         graphics.histos["HardProcess:WithSelection:pTjjj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).Pt() )
-         graphics.histos["HardProcess:WithSelection:pTlvj"].Fill( (tru_mu+tru_nu+tru_bL_prod).Pt() )
-         graphics.histos["HardProcess:WithSelection:pTjjj-pTlvj"].Fill( (tru_qW+tru_qbarW+tru_bH_prod).Pt() - (tru_mu+tru_nu+tru_bL_prod).Pt() )
-         graphics.histos["HardProcess:WithSelection:dRlephad"].Fill( (tru_mu+tru_nu+tru_bL_prod).DeltaR(tru_qW+tru_qbarW+tru_bH_prod) )
-         graphics.histos["HardProcess:WithSelection:dRwbhad"].Fill( tru_bH_prod.DeltaR(tru_qW+tru_qbarW) )
-         graphics.histos["HardProcess:WithSelection:dRwblep"].Fill( tru_bL_prod.DeltaR(tru_mu+tru_nu) )
-         ### model histograms - "reco" level
-         for i in xrange(wgt.size()):
-            hname1 = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-            hname2 = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-            hname3 = "HardProcess:WithSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-            hname4 = "HardProcess:WithSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-            hname5 = "HardProcess:WithSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-            hname6 = "HardProcess:WithSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-            graphics.histos[hname1].Fill((tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).M() ,wgt[i])
-            graphics.histos[hname2].Fill((tru_mu+tru_nu+tru_bL_prod+tru_qW+tru_qbarW+tru_bH_prod).M() ,wgt[i]-1.)
-            graphics.histos[hname3].Fill((tru_qW+tru_qbarW+tru_bH_prod).Pt() ,wgt[i])
-            graphics.histos[hname4].Fill((tru_qW+tru_qbarW+tru_bH_prod).Pt() ,wgt[i]-1.)
-            graphics.histos[hname5].Fill((tru_mu+tru_nu+tru_bL_prod).Pt() ,wgt[i])
-            graphics.histos[hname6].Fill((tru_mu+tru_nu+tru_bL_prod).Pt() ,wgt[i]-1.)
+      graphics.histos["Matching:dR:bL"].Fill(rec_j4.DeltaR(tru_bL_decay)) # rec_j4.DeltaR(tru_bL_prod)
+      if(rec_j1.DeltaR(tru_qW)<rec_j2.DeltaR(tru_qW)):       graphics.histos["Matching:dR:q"].Fill(rec_j1.DeltaR(tru_qW))
+      else:                                                  graphics.histos["Matching:dR:q"].Fill(rec_j2.DeltaR(tru_qW))
+      if(rec_j1.DeltaR(tru_qbarW)<rec_j2.DeltaR(tru_qbarW)): graphics.histos["Matching:dR:qbar"].Fill(rec_j1.DeltaR(tru_qbarW))
+      else:                                                  graphics.histos["Matching:dR:qbar"].Fill(rec_j2.DeltaR(tru_qbarW))
+      graphics.histos["Matching:dR:bH"].Fill(rec_j3.DeltaR(tru_bH_decay)) # rec_j3.DeltaR(tru_bH_prod)
+     
+      graphics.histos["HardProcess:WithSelection:mjjjlvj"].Fill( tru_pjjjlvj.M() )
+      graphics.histos["HardProcess:WithSelection:mjj"].Fill( tru_pjj.M() )
+      graphics.histos["HardProcess:WithSelection:mjj-mW"].Fill( tru_pjj.M()-hardproc.mW )
+      graphics.histos["HardProcess:WithSelection:mjjj"].Fill( tru_pjjj.M() )
+      graphics.histos["HardProcess:WithSelection:mjjj-mt"].Fill( tru_pjjj.M()-hardproc.mt )
+      graphics.histos["HardProcess:WithSelection:mjjj-mjj"].Fill( tru_pjjj.M() - tru_pjj.M())
+      graphics.histos["HardProcess:WithSelection:mjjj-mjj-(mt-mW)"].Fill( tru_pjjj.M() - tru_pjj.M() - (hardproc.mt-hardproc.mW))
+      graphics.histos["HardProcess:WithSelection:mlvj"].Fill( tru_plvj.M() )
+      graphics.histos["HardProcess:WithSelection:mlvj-mt"].Fill( tru_plvj.M() - hardproc.mt )
+      graphics.histos["HardProcess:WithSelection:pTjjjlvj"].Fill( tru_pjjjlvj.Pt() )
+      graphics.histos["HardProcess:WithSelection:pTjjj"].Fill( tru_pjjj.Pt() )
+      graphics.histos["HardProcess:WithSelection:pTlvj"].Fill( tru_plvj.Pt() )
+      graphics.histos["HardProcess:WithSelection:pTjjj-pTlvj"].Fill( tru_pjjj.Pt() - tru_plvj.Pt() )
+      graphics.histos["HardProcess:WithSelection:dRlephad"].Fill( tru_plvj.DeltaR(tru_pjjj) )
+      graphics.histos["HardProcess:WithSelection:dRwbhad"].Fill( tru_bH_decay.DeltaR(tru_pjj) ) # tru_bH_prod.DeltaR(tru_pjj)
+      graphics.histos["HardProcess:WithSelection:dRwblep"].Fill( tru_bL_decay.DeltaR(tru_plv) ) # tru_bL_prod.DeltaR(tru_plv)
+      ### model histograms - "reco" level
+      for i in xrange(wgt.size()):
+         hname1 = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname2 = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         hname3 = "HardProcess:WithSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname4 = "HardProcess:WithSelection:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         hname5 = "HardProcess:WithSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname6 = "HardProcess:WithSelection:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         graphics.histos[hname1].Fill(tru_pjjjlvj.M() ,wgt[i])
+         graphics.histos[hname2].Fill(tru_pjjjlvj.M() ,wgt[i]-1.)
+         graphics.histos[hname3].Fill(tru_pjjj.Pt() ,wgt[i])
+         graphics.histos[hname4].Fill(tru_pjjj.Pt() ,wgt[i]-1.)
+         graphics.histos[hname5].Fill(tru_plvj.Pt() ,wgt[i])
+         graphics.histos[hname6].Fill(tru_plvj.Pt() ,wgt[i]-1.)
 
       ############################
       # if(nmatched<6): continue ###
       if(nmatched==6): nTruMatch_selected_objects += 1
       ############################
+
+      graphics.histos["All:SelectedObjects:mjjjlvj"].Fill(mjjjlvj)
+      graphics.histos["All:SelectedObjects:mjj"].Fill(mjj)
+      graphics.histos["All:SelectedObjects:mjj-mW"].Fill(mjj-hardproc.mW)
+      graphics.histos["All:SelectedObjects:mjjj"].Fill(mjjj)
+      graphics.histos["All:SelectedObjects:mjjj-mt"].Fill(mjjj-hardproc.mt)
+      graphics.histos["All:SelectedObjects:mjjj-mjj"].Fill(mjjj-mjj)
+      graphics.histos["All:SelectedObjects:mjjj-mjj-(mt-mW)"].Fill(mjjj-mjj-(hardproc.mt-hardproc.mW))
+      graphics.histos["All:SelectedObjects:mlvj"].Fill(mlvj)
+      graphics.histos["All:SelectedObjects:mlvj-mt"].Fill(mlvj-hardproc.mt)
+      graphics.histos["All:SelectedObjects:pTjjjlvj"].Fill(pTjjjlvj)
+      graphics.histos["All:SelectedObjects:pTjjj"].Fill(pTjjj)
+      graphics.histos["All:SelectedObjects:pTlvj"].Fill(pTlvj)
+      graphics.histos["All:SelectedObjects:pTjjj-pTlvj"].Fill(pTjjj-pTlvj)
+      graphics.histos["All:SelectedObjects:dRlephad"].Fill(dRlephad)
+      graphics.histos["All:SelectedObjects:dRwbhad"].Fill(dRwbhad)
+      graphics.histos["All:SelectedObjects:dRwblep"].Fill(dRwblep)
+      ### model histograms - "reco" level
+      for i in xrange(wgt.size()):
+         hname1 = "All:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname2 = "All:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         hname3 = "All:SelectedObjects:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname4 = "All:SelectedObjects:pTjjj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         hname5 = "All:SelectedObjects:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+         hname6 = "All:SelectedObjects:pTlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+         graphics.histos[hname1].Fill(mjjjlvj ,wgt[i])
+         graphics.histos[hname2].Fill(mjjjlvj ,wgt[i]-1.)
+         graphics.histos[hname3].Fill(pTjjj ,wgt[i])
+         graphics.histos[hname4].Fill(pTjjj ,wgt[i]-1.)
+         graphics.histos[hname5].Fill(pTlvj ,wgt[i])
+         graphics.histos[hname6].Fill(pTlvj ,wgt[i]-1.)
 
 
       if(nmatched==6):
@@ -819,20 +895,6 @@ for event in tree:
             graphics.histos[hname5].Fill(pTlvj ,wgt[i])
             graphics.histos[hname6].Fill(pTlvj ,wgt[i]-1.)
 
-      for k in xrange(event.p4_wbosons.size()):
-         if(event.id_wbosons_children[k].size()!=2): continue
-         id0 = abs(event.id_wbosons_children[k][0])
-         id1 = abs(event.id_wbosons_children[k][1])
-         if((id0==14 and id1==13) or (id0==13 and id1==14)): continue
-         v = TLorentzVector()
-         l = TLorentzVector()
-         if(id0==14 and id1==13):
-            v = event.p4_wbosons_children[k][0]
-            l = event.p4_wbosons_children[k][1]
-         else:
-            v = event.p4_wbosons_children[k][1]
-            l = event.p4_wbosons_children[k][0]
-
       graphics.histos["TopTag:mTw"].Fill(mTW)
       graphics.histos["TopTag:mwL"].Fill(mlv)
       graphics.histos["TopTag:mtL"].Fill(mlvj)
@@ -842,50 +904,34 @@ for event in tree:
       graphics.histos["TopTag:pTtLep"].Fill(pTlvj)
       graphics.histos["TopTag:pTtHad"].Fill(pTjjj)
       graphics.histos["TopTag:dRlephad"].Fill(dRlephad)
-
+      
       ### model histograms - "reco" level
       for i in xrange(wgt.size()):
          hname1 = "TopTag:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
          hname2 = "TopTag:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
          graphics.histos[hname1].Fill(mjjjlvj ,wgt[i])
          graphics.histos[hname2].Fill(mjjjlvj ,wgt[i]-1.)
-
+      
       ######## this is process specific ########
-      if(len(p4_tops)==2 and len(topdecay)==2):
-         itL = -1
-         itH = -1
-         if(topdecay[0]=="lep"):
-            itL = 0
-            itH = 1
-         elif(topdecay[0]=="had"):
-            itH = 0
-            itL = 1
-         if(ibestconf>=0):
-            graphics.histos["HarProcessTops:dRlep"].Fill((pl+pv+pj4).DeltaR(p4_tops[itL]))
-            graphics.histos["HarProcessTops:dRhad"].Fill((pj1+pj2+pj3).DeltaR(p4_tops[itH]))
-            graphics.histos["HarProcessTops:dpTRellep"].Fill(pTlvj/p4_tops[itL].Pt()-1.)
-            graphics.histos["HarProcessTops:dpTRelhad"].Fill(pTjjj/p4_tops[itH].Pt()-1.)
-            graphics.histos["HarProcessTops:mtt"].Fill( (p4_tops[0]+p4_tops[1]).M() )
-            graphics.histos["HarProcessTops:pTlep"].Fill( p4_tops[itL].Pt() )
-            graphics.histos["HarProcessTops:pThad"].Fill( p4_tops[itH].Pt() )
-            graphics.histos["HarProcessTops:dmRel"].Fill(mjjjlvj/(p4_tops[0]+p4_tops[1]).M()-1.)
-            graphics.histos["HarProcessTops:dpTRel:dRtru:lep"].Fill((pl+pv+pj4).DeltaR(p4_tops[itL]) , pTlvj/p4_tops[itL].Pt()-1.)
-            graphics.histos["HarProcessTops:dpTRel:dRtru:had"].Fill((pj1+pj2+pj3).DeltaR(p4_tops[itH]) , pTjjj/p4_tops[itH].Pt()-1.)
-
+      if(ibestconf>=0):
+         graphics.histos["HardProcessTops:dRlep"].Fill( (pl+pv+pj4).DeltaR(tru_plvj) )
+         graphics.histos["HardProcessTops:dRhad"].Fill( (pj1+pj2+pj3).DeltaR(tru_pjjj) )
+         graphics.histos["HardProcessTops:dpTRellep"].Fill(pTlvj/truth["pTlvj"]-1.)
+         graphics.histos["HardProcessTops:dpTRelhad"].Fill(pTjjj/truth["pTjjj"]-1.)
+         graphics.histos["HardProcessTops:mtt"].Fill( truth["mjjjlvj"] )
+         graphics.histos["HardProcessTops:pTtLep"].Fill( truth["pTlvj"] )
+         graphics.histos["HardProcessTops:pTtHad"].Fill( truth["pTjjj"] )
+         graphics.histos["HardProcessTops:dmRel"].Fill(mjjjlvj/truth["mjjjlvj"]-1.)
+         graphics.histos["HardProcessTops:dpTRel:dRtru:lep"].Fill( (pl+pv+pj4).DeltaR(tru_plvj),   pTlvj/truth["pTlvj"]-1.)
+         graphics.histos["HardProcessTops:dpTRel:dRtru:had"].Fill( (pj1+pj2+pj3).DeltaR(tru_pjjj), pTjjj/truth["pTjjj"]-1.)
+      
          ### model histograms - hard process
          for i in xrange(wgt.size()):
-            hname1 = "HarProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-            hname2 = "HarProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-            graphics.histos[hname1].Fill( (p4_tops[0]+p4_tops[1]).M() ,wgt[i])
-            graphics.histos[hname2].Fill( (p4_tops[0]+p4_tops[1]).M() ,wgt[i]-1.)
-	   
-
-      else:
-         print "Warning: hard process problem in event %i (EventNumber=%i and RunNumber=%i)" % (n,event.EventNumber,event.RunNumber)
-         print id_tops
-         print topdecay
+            hname1 = "HardProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+            hname2 = "HardProcessTops:2HDM::mtt:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+            graphics.histos[hname1].Fill( truth["mjjjlvj"] ,wgt[i])
+            graphics.histos[hname2].Fill( truth["mjjjlvj"] ,wgt[i]-1.)
       ###########################################
-
    ### end of events loop
 
 if(apnd=="yes"):
@@ -918,24 +964,28 @@ graphics.plotHist(fname,     "TopTag:mwL")
 graphics.plotHist(fname,     "TopTag:mtH")
 graphics.plotHist(fname,     "TopTag:mtL")
 graphics.plotHist(fname,     "TopTag:dRlephad")
-graphics.plotHist(fname,     "HarProcessTops:dRhad")
-graphics.plotHist(fname,     "HarProcessTops:dRlep")
-graphics.plotHist(fname,     "HarProcessTops:dpTRelhad")
-graphics.plotHist(fname,     "HarProcessTops:dpTRellep")
-graphics.plotHist2(fname,    "TopTag:pTtHad","HarProcessTops:pThad")
-graphics.plotHist2(fname,    "TopTag:pTtLep","HarProcessTops:pTlep")
-graphics.plotHist2(fname,    "TopTag:mtt","HarProcessTops:mtt")
-graphics.plotHist(fname,     "HarProcessTops:dmRel")
-graphics.plotHist2D(fname,   "HarProcessTops:dpTRel:dRtru:had",True)
-graphics.plotHist2D(fname,   "HarProcessTops:dpTRel:dRtru:lep",True)
+graphics.plotHist(fname,     "HardProcessTops:dRhad")
+graphics.plotHist(fname,     "HardProcessTops:dRlep")
+graphics.plotHist(fname,     "HardProcessTops:dpTRelhad")
+graphics.plotHist(fname,     "HardProcessTops:dpTRellep")
+graphics.plotHist2(fname,    "TopTag:pTtHad","HardProcessTops:pTtHad")
+graphics.plotHist2(fname,    "TopTag:pTtLep","HardProcessTops:pTtLep")
+graphics.plotHist2(fname,    "TopTag:mtt","HardProcessTops:mtt")
+graphics.plotHist(fname,     "HardProcessTops:dmRel")
+graphics.plotHist2D(fname,   "HardProcessTops:dpTRel:dRtru:had",True)
+graphics.plotHist2D(fname,   "HardProcessTops:dpTRel:dRtru:lep",True)
 graphics.plotHist(fname,     "Matching:dR:mu")
 graphics.plotHist(fname,     "Matching:dR:nu")
-graphics.plotHist(fname,     "Matching:dR:b")
-graphics.plotHist(fname,     "Matching:dR:j1q")
-graphics.plotHist(fname,     "Matching:dR:j1qbar")
-graphics.plotHist(fname,     "Matching:dR:j2q")
-graphics.plotHist(fname,     "Matching:dR:j2qbar")
-graphics.plotHist(fname,     "Matching:dR:j3")
+graphics.plotHist(fname,     "Matching:dR:bL")
+graphics.plotHist(fname,     "Matching:dR:q")
+graphics.plotHist(fname,     "Matching:dR:qbar")
+graphics.plotHist(fname,     "Matching:dR:bH")
+graphics.plotHist(fname,     "BestMatching:dR:mu")
+graphics.plotHist(fname,     "BestMatching:dR:nu")
+graphics.plotHist(fname,     "BestMatching:dR:bL")
+graphics.plotHist(fname,     "BestMatching:dR:q")
+graphics.plotHist(fname,     "BestMatching:dR:qbar")
+graphics.plotHist(fname,     "BestMatching:dR:bH")
 graphics.plotHist(fname,     "HardProcess:NoSelection:mjjjlvj",False,"top products (before selection)")
 graphics.plotHist(fname,     "HardProcess:NoSelection:mjj",False,"top products (before selection)")
 graphics.plotHist(fname,     "HardProcess:NoSelection:mjj-mW",False,"top products (before selection)")
@@ -1000,10 +1050,24 @@ graphics.plotHist(fname,     "Matched:SelectedObjects:mlvj-mt",False,"Reco+match
 graphics.plotHist(fname,     "Matched:SelectedObjects:pTjjjlvj",False,"Reco+matched, selected objects")
 graphics.plotHist(fname,     "Matched:SelectedObjects:pTjjj",False,"Reco+matched, selected objects")
 graphics.plotHist(fname,     "Matched:SelectedObjects:pTlvj",False,"Reco+matched, selected objects")
-graphics.plotHist(fname+")", "Matched:SelectedObjects:pTjjj-pTlvj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "Matched:SelectedObjects:pTjjj-pTlvj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mjjjlvj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mjj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mjj-mW",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mjjj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mjjj-mt",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mjjj-mjj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mjjj-mjj-(mt-mW)",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mlvj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:mlvj-mt",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:pTjjjlvj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:pTjjj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname,     "All:SelectedObjects:pTlvj",False,"Reco+matched, selected objects")
+graphics.plotHist(fname+")", "All:SelectedObjects:pTjjj-pTlvj",False,"Reco+matched, selected objects")
 
-fname1 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.pdf"
-fname2 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.ratio.reconstructed.pdf"
+fname0 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.pdf"
+fname1 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.ratio.reco_all.pdf"
+fname2 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.ratio.reco_matched.pdf"
 fname3 = path+"/Test.TTree.TRUTH1."+name+"."+nameX+"."+str(mX)+"GeV.ratio.hardprocess.pdf"
 ### model histograms
 tanbindices = {}
@@ -1013,23 +1077,28 @@ for i in xrange(len(THDM.parameters)):
 ihistos = collections.OrderedDict(sorted(tanbindices.items())).values()
 ii=0
 for i in ihistos:
-   name1  = "Matched:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-   name1i = "Matched:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-   name2  = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
-   name2i = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
-   name3  = "Matched:SelectedObjects:mjjjlvj"
-   name4  = "HardProcess:WithSelection:mjjjlvj"
+   name_xx_all = "All:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+   name_ix_all = "All:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+   name_xx_mat = "Matched:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+   name_ix_mat = "Matched:SelectedObjects:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+   name_xx_hps = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":"+str(i)
+   name_ix_hps = "HardProcess:WithSelection:mjjjlvj:"+graphics.ModelName+":"+graphics.ModelMass+":IX:"+str(i)
+   name_sm_all = "All:SelectedObjects:mjjjlvj"
+   name_sm_mat = "Matched:SelectedObjects:mjjjlvj"
+   name_sm_hps = "HardProcess:WithSelection:mjjjlvj"
    tanb   = '%.2f' % THDM.parameters[i].get("tanb")
+   sinba  = '%.2f' % THDM.parameters[i].get("sba")
    wX = THDM.parameters[i].get("w"+nameX)/mX*100
-   model = "m_{"+nameX+"}="+str(mX)+" GeV, tan#beta="+str(tanb)
+   model = "m_{"+nameX+"}="+str(mX)+" GeV, tan#beta="+str(tanb)+", sin(#beta-#alpha)="+str(sinba)
    suff = ""
    if(len(THDM.parameters)>1):
       if(ii==0):                        suff = "("
       elif(ii==len(THDM.parameters)-1): suff = ")"
       else:                             suff = ""
-   graphics.plotHist4(fname1+suff,model,name1,name2,name3,name4)
-   graphics.plotRatio(fname2+suff,'"Reconstructed" level tops',  name3,name1,name1i,wX,tanb,nameX,mX)
-   graphics.plotRatio(fname3+suff,"Hard-process level tops",     name4,name2,name2i,wX,tanb,nameX,mX)
+   # graphics.plotHist4(fname0+suff,model,name1,name2,name00,name4)
+   graphics.plotRatio(fname1+suff,'Selected (all)',     name_sm_all,name_xx_all,name_ix_all,wX,tanb,sinba,nameX,mX)
+   graphics.plotRatio(fname2+suff,'Selected (matched)', name_sm_mat,name_xx_mat,name_ix_mat,wX,tanb,sinba,nameX,mX)
+   graphics.plotRatio(fname3+suff,"Hard-process",       name_sm_hps,name_xx_hps,name_ix_hps,wX,tanb,sinba,nameX,mX)
    ii += 1
 
 hfname = path+"/histograms."+name+"."+nameX+".root"
@@ -1038,6 +1107,7 @@ graphics.writeHistos(hfname)
 print "=================================================== cutflow ==================================================="
 print "Processessed: ",n
 print cutflow
+print "nLepHad = ",nLepHad
 print "nTruMatch_before_selection = ",nTruMatch_before_selection
 print "nTruMatch_after_selection  = ",nTruMatch_after_selection
 print "nTruMatch_selected_objects = ",nTruMatch_selected_objects

@@ -138,7 +138,7 @@ class Graphics:
       cnv.SaveAs(fname)
       gStyle.SetPadRightMargin(0.08)
 
-   def plotRatio(self,fname,level,nameSM,nameXX,nameIX,wX,stanb,nameX,mX):
+   def plotRatio(self,fname,level,nameSM,nameXX,nameIX,wX,stanb,ssinba,nameX,mX):
       cnv = TCanvas(nameXX,"",600,600)
       cnv.Divide(1,2)
       tvp_hists = cnv.cd(1)
@@ -155,14 +155,14 @@ class Graphics:
       sXtitle = self.histos[nameXX].GetXaxis().GetTitle()
 
       self.histos[nameXX].SetMarkerStyle(20)
-      self.histos[nameXX].SetMarkerSize(0.9)
+      self.histos[nameXX].SetMarkerSize(0.6)
       self.histos[nameXX].SetMarkerColor(ROOT.kRed)
       self.histos[nameXX].SetLineColor(ROOT.kRed)
       self.histos[nameXX].SetLineStyle(1)
       self.histos[nameXX].SetLineWidth(2)
 
       self.histos[nameSM].SetMarkerStyle(24)
-      self.histos[nameSM].SetMarkerSize(0.9)
+      self.histos[nameSM].SetMarkerSize(0.6)
       self.histos[nameSM].SetMarkerColor(ROOT.kBlack)
       self.histos[nameSM].SetLineColor(ROOT.kBlack)
       self.histos[nameSM].SetLineStyle(1)
@@ -173,7 +173,7 @@ class Graphics:
       hr.SetTitle(";"+sXtitle+";|SM+#it{"+nameX+"}|^{2}/|SM|^{2}-1 [%]")
       hr.Divide(self.histos[nameIX],self.histos[nameSM],100.,1.) ### to have the interference shape relative to the SM shape in percentage
       hr.SetMarkerStyle(20)
-      hr.SetMarkerSize(0.7)
+      hr.SetMarkerSize(0.6)
       hr.SetMarkerColor(ROOT.kBlack)
       hr.SetLineColor(ROOT.kBlack)
       hr.SetLineStyle(1)
@@ -208,7 +208,7 @@ class Graphics:
       leg.AddEntry(self.histos[nameXX],"|SM+#it{"+nameX+"}|^{2} reweighted","ple")
       leg.AddEntry(self.histos[nameSM],"|SM|^{2}","ple")
       leg.AddEntry(0, "tan#beta="+stanb, "")
-      leg.AddEntry(0, "sin(#beta-#alpha)=1", "")
+      leg.AddEntry(0, "sin(#beta-#alpha)="+ssinba, "")
       leg.AddEntry(0, "#it{m}_{#it{"+nameX+"}}="+str(mX)+" GeV", "")
       leg.AddEntry(0, "#Gamma_{#it{"+nameX+"}}="+'%.4f' % wX+"%", "")
 
@@ -247,14 +247,14 @@ class Graphics:
    
    def bookHistos(self):
       self.addHist1N("TopTag:2HDM::mtt:"+self.ModelName+":"+self.ModelMass+":"         ,";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350,ROOT.kGray+2,24)
-      self.addHist1N("HarProcessTops:2HDM::mtt:"+self.ModelName+":"+self.ModelMass+":" ,";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350,ROOT.kGreen+1,24)
+      self.addHist1N("HardProcessTops:2HDM::mtt:"+self.ModelName+":"+self.ModelMass+":" ,";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350,ROOT.kGreen+1,24)
 
       self.addHist1N("TopTag:2HDM::mtt:"+self.ModelName+":"+self.ModelMass+":IX:"         ,";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350,ROOT.kGray+2,20)
-      self.addHist1N("HarProcessTops:2HDM::mtt:"+self.ModelName+":"+self.ModelMass+":IX:" ,";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350,ROOT.kGreen+1,20)
+      self.addHist1N("HardProcessTops:2HDM::mtt:"+self.ModelName+":"+self.ModelMass+":IX:" ,";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350,ROOT.kGreen+1,20)
       
-      self.addHist1("HarProcessTops:mtt", ";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",       40,350,1350, ROOT.kAzure,20)
-      self.addHist1("HarProcessTops:pTlep", ";First hard-process p_{T}(#it{t}_{lep}) [GeV];Events", 40,50,550,   ROOT.kAzure,20)
-      self.addHist1("HarProcessTops:pThad", ";Second hard-process p_{T}(#it{t}_{had}) [GeV];Events",40,50,550,   ROOT.kAzure,20)
+      self.addHist1("HardProcessTops:mtt", ";#it{m}(#it{t}_{had}#it{t}_{lep}) [GeV];Events", 40,350,1350, ROOT.kAzure,20)
+      self.addHist1("HardProcessTops:pTtLep", ";p_{T}(#it{t}_{lep}) [GeV];Events", 40,50,550,  ROOT.kAzure,20)
+      self.addHist1("HardProcessTops:pTtHad", ";p_{T}(#it{t}_{had}) [GeV];Events",40,50,550,   ROOT.kAzure,20)
       
       self.addHist1("Muons:Mult", ";Muon multiplicity;Events",5,0,5)
       self.addHist1("Muons:pT1",  ";Leading muon p_{T} [GeV];Events",50,0,500)
@@ -307,11 +307,11 @@ class Graphics:
       self.addHist1("TopTag:mtH",  ";#it{m}(#it{t}_{had}) [GeV];Events",50,50,350)
       self.addHist1("TopTag:mtL", ";#it{m}(#it{t}_{lep}) [GeV];Events",50,50,350)
       
-      self.addHist1("HarProcessTops:dRlep", ";#DeltaR(#it{t}_{lep}^{tru},#it{t}_{lep}^{rec});Events",35,0,7)
-      self.addHist1("HarProcessTops:dRhad", ";#DeltaR(#it{t}_{had}^{tru},#it{t}_{had}^{rec});Events",35,0,7)
+      self.addHist1("HardProcessTops:dRlep", ";#DeltaR(#it{t}_{lep}^{tru},#it{t}_{lep}^{rec});Events",35,0,7)
+      self.addHist1("HardProcessTops:dRhad", ";#DeltaR(#it{t}_{had}^{tru},#it{t}_{had}^{rec});Events",35,0,7)
       
-      self.addHist1("HarProcessTops:dpTRellep", ";#it{t}_{lep}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",50,-1,+2)
-      self.addHist1("HarProcessTops:dpTRelhad", ";#it{t}_{had}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",50,-1,+2)
+      self.addHist1("HardProcessTops:dpTRellep", ";#it{t}_{lep}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",50,-1,+2)
+      self.addHist1("HardProcessTops:dpTRelhad", ";#it{t}_{had}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",50,-1,+2)
       
       self.addHist1("TopTag:pTtTLep", ";#it{p}_{T}(#it{t}_{lepT}) [GeV];Events",40,50,550)
       self.addHist1("TopTag:pTtLep", ";#it{p}_{T}(#it{t}_{lep}) [GeV];Events",40,50,550)
@@ -320,20 +320,23 @@ class Graphics:
       self.addHist1("TopTag:dRlephad", ";#DeltaR(#it{t}_{lep}^{rec},#it{t}_{had}^{rec});Events",35,0,7)
       self.addHist1("TopTag:mtt", ";#it{m}(#it{t}_{had}, #it{t}_{lep}) [GeV];Events",40,350,1350)
       
-      self.addHist1("HarProcessTops:dmRel", ";#it{t}_{lep}: #it{m}^{rec}(#it{t}_{had}, #it{t}_{lep})/#it{m}^{tru}(#it{t}_{had}, #it{t}_{lep})-1;Events",50,-2,+2)
+      self.addHist1("HardProcessTops:dmRel", ";#it{t}_{lep}: #it{m}^{rec}(#it{t}_{had}, #it{t}_{lep})/#it{m}^{tru}(#it{t}_{had}, #it{t}_{lep})-1;Events",50,-2,+2)
       
-      self.addHist2("HarProcessTops:dpTRel:dRtru:had", ";#DeltaR(#it{t}_{had}^{tru},#it{t}_{had}^{rec});#it{t}_{had}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",100,0,5, 100,-1,+2)
-      self.addHist2("HarProcessTops:dpTRel:dRtru:lep", ";#DeltaR(#it{t}_{lep}^{tru},#it{t}_{lep}^{rec});#it{t}_{lep}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",100,0,5, 100,-1,+2)
+      self.addHist2("HardProcessTops:dpTRel:dRtru:had", ";#DeltaR(#it{t}_{had}^{tru},#it{t}_{had}^{rec});#it{t}_{had}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",100,0,5, 100,-1,+2)
+      self.addHist2("HardProcessTops:dpTRel:dRtru:lep", ";#DeltaR(#it{t}_{lep}^{tru},#it{t}_{lep}^{rec});#it{t}_{lep}: #it{p}_{T}^{rec}/#it{p}_{T}^{tru}-1;Events",100,0,5, 100,-1,+2)
 
-      self.addHist1("Matching:dR:mu", ";#DeltaR(lep_{tru},lep_{rec});Events",35,0,7)
-      self.addHist1("Matching:dR:nu", ";#DeltaR(#nu_{tru},#nu_{rec});Events",35,0,7)
-      self.addHist1("Matching:dR:b",  ";#DeltaR(bL_{tru},b_{rec});Events",35,0,7)
-      self.addHist1("Matching:dR:j1q", ";#DeltaR(q_{tru},j1_{rec});Events",35,0,7)
-      self.addHist1("Matching:dR:j1qbar", ";#DeltaR(#bar{q}_{tru},j1_{rec});Events",35,0,7)
-      self.addHist1("Matching:dR:j2q", ";#DeltaR(q_{tru},j2_{rec});Events",35,0,7)
-      self.addHist1("Matching:dR:j2qbar", ";#DeltaR(#bar{q}_{tru},j2_{rec});Events",35,0,7)
-      self.addHist1("Matching:dR:j3", ";#DeltaR(bH_{tru},j3_{rec});Events",35,0,7)
-
+      self.addHist1("Matching:dR:mu", ";#DeltaR(lep_{tru},lep_{rec}^{selected});Events",35,0,7)
+      self.addHist1("Matching:dR:nu", ";#DeltaR(#nu_{tru},#nu_{rec}^{selected});Events",35,0,7)
+      self.addHist1("Matching:dR:bL",  ";#DeltaR(bL_{tru},b_{rec}^{selected});Events",35,0,7)
+      self.addHist1("Matching:dR:q", ";#DeltaR(q_{tru},j_{rec}^{selected});Events",35,0,7)
+      self.addHist1("Matching:dR:qbar", ";#DeltaR(#bar{q}_{tru},j_{rec}^{selected});Events",35,0,7)
+      self.addHist1("Matching:dR:bH", ";#DeltaR(bH_{tru},b_{rec}^{selected});Events",35,0,7)
+      self.addHist1("BestMatching:dR:mu", ";#DeltaR(lep_{tru},lep_{rec}^{best});Events",35,0,7)
+      self.addHist1("BestMatching:dR:nu", ";#DeltaR(#nu_{tru},#nu_{rec}^{best});Events",32,0,ROOT.TMath.Pi())
+      self.addHist1("BestMatching:dR:bL",  ";#DeltaR(bL_{tru},b_{rec}^{best});Events",35,0,7)
+      self.addHist1("BestMatching:dR:q", ";#DeltaR(q_{tru},j_{rec}^{best});Events",35,0,7)
+      self.addHist1("BestMatching:dR:qbar", ";#DeltaR(#bar{q}_{tru},j_{rec}^{best});Events",35,0,7)
+      self.addHist1("BestMatching:dR:bH", ";#DeltaR(bH_{tru},b_{rec}^{best});Events",35,0,7)
 
       self.addHist1N("Matched:NoSelection:mjjjlvj:"+self.ModelName+":"+self.ModelMass+":", ";#it{m}_{jjjlvj} [GeV];Events",100,350,1350,ROOT.kRed,24)
       self.addHist1N("Matched:NoSelection:pTjjj:"  +self.ModelName+":"+self.ModelMass+":", ";#it{p}_{T}^{jjj} [GeV];Events",100,0,500,  ROOT.kRed,24)
@@ -403,6 +406,30 @@ class Graphics:
       self.addHist1("Matched:SelectedObjects:dRlephad",         ";#DeltaR(jjj,lvj);Events",100,1,5.2)
       self.addHist1("Matched:SelectedObjects:dRwbhad",          ";#DeltaR(jj,b_{had}^{notag});Events",100,0,5)
       self.addHist1("Matched:SelectedObjects:dRwblep",          ";#DeltaR(lv,b_{lep}^{notag});Events",100,0,5)
+
+      self.addHist1N("All:SelectedObjects:mjjjlvj:"+self.ModelName+":"+self.ModelMass+":", ";#it{m}_{jjjlvj} [GeV];Events",100,350,1350, ROOT.kRed,24)
+      self.addHist1N("All:SelectedObjects:pTjjj:"  +self.ModelName+":"+self.ModelMass+":", ";#it{p}_{T}^{jjj} [GeV];Events",100,0,500,   ROOT.kRed,24)
+      self.addHist1N("All:SelectedObjects:pTlvj:"  +self.ModelName+":"+self.ModelMass+":", ";#it{p}_{T}^{lvj} [GeV];Events",100,0,500,   ROOT.kRed,24)
+      self.addHist1N("All:SelectedObjects:mjjjlvj:"+self.ModelName+":"+self.ModelMass+":IX:", ";#it{m}_{jjjlvj} [GeV];Events",100,350,1350, ROOT.kRed,24)
+      self.addHist1N("All:SelectedObjects:pTjjj:"  +self.ModelName+":"+self.ModelMass+":IX:", ";#it{p}_{T}^{jjj} [GeV];Events",100,0,500,   ROOT.kRed,24)
+      self.addHist1N("All:SelectedObjects:pTlvj:"  +self.ModelName+":"+self.ModelMass+":IX:", ";#it{p}_{T}^{lvj} [GeV];Events",100,0,500,   ROOT.kRed,24)
+      self.addHist1("All:SelectedObjects:mjjjlvj",          ";#it{m}_{jjjlvj} [GeV];Events",100,350,1350)
+      self.addHist1("All:SelectedObjects:mjj",              ";#it{m}_{jj} [GeV];Events",100,50,120)
+      self.addHist1("All:SelectedObjects:mjj-mW",           ";#it{m}_{jj}-#it{m}_{#it{W}} [GeV];Events",100,-50,+50)
+      self.addHist1("All:SelectedObjects:mjjj",             ";#it{m}_{jjj} [GeV];Events",100,120,220)
+      self.addHist1("All:SelectedObjects:mjjj-mt",          ";#it{m}_{jjj}-#it{m}_{#it{t}} [GeV];Events",100,-50,+50)
+      self.addHist1("All:SelectedObjects:mjjj-mjj",         ";#it{m}_{jjj}-#it{m}_{jj} [GeV];Events",100,30,130)
+      self.addHist1("All:SelectedObjects:mjjj-mjj-(mt-mW)", ";#it{m}_{jjj}-#it{m}_{jj}-(#it{m}_{#it{t}}-#it{m}_{#it{W}}) [GeV];Events",100,-50,+50)
+      self.addHist1("All:SelectedObjects:mlvj",             ";#it{m}_{lvj} [GeV];Events",100,120,220)
+      self.addHist1("All:SelectedObjects:mlvj-mt",          ";#it{m}_{lvj}-#it{m}_{#it{t}} [GeV];Events",100,-50,+50)
+      self.addHist1("All:SelectedObjects:pTjjjlvj",         ";#it{p}_{T}^{jjjlvj} [GeV];Events",100,0,250)
+      self.addHist1("All:SelectedObjects:pTjjj",            ";#it{p}_{T}^{jjj} [GeV];Events",100,0,500)
+      self.addHist1("All:SelectedObjects:pTlvj",            ";#it{p}_{T}^{lvj} [GeV];Events",100,0,500)
+      self.addHist1("All:SelectedObjects:pTjjj-pTlvj",      ";#it{p}_{T}^{jjj}-#it{p}_{T}^{lvj} [GeV];Events",100,-120,+120)
+      self.addHist1("All:SelectedObjects:dRlephad",         ";#DeltaR(jjj,lvj);Events",100,1,5.2)
+      self.addHist1("All:SelectedObjects:dRwbhad",          ";#DeltaR(jj,b_{had}^{notag});Events",100,0,5)
+      self.addHist1("All:SelectedObjects:dRwblep",          ";#DeltaR(lv,b_{lep}^{notag});Events",100,0,5)
+
 
       self.addHist1N("HardProcess:NoSelection:mjjjlvj:"+self.ModelName+":"+self.ModelMass+":", ";#it{m}_{jjjlvj} [GeV];Events",100,350,1350, ROOT.kRed,24)
       self.addHist1N("HardProcess:NoSelection:pTjjj:"  +self.ModelName+":"+self.ModelMass+":", ";#it{p}_{T}^{jjj} [GeV];Events",100,0,500,   ROOT.kRed,24)

@@ -93,8 +93,9 @@ class TTbarTagger:
 
    def WmassConstraint(self,wMass):
       mL = self.p4_lepton.M()
-      dphi = self.p4_lepton.Phi() - self.p4_etmis.Phi()
-      A = (wMass*wMass-mL*mL)/2 + self.p4_etmis.Pt()*self.p4_lepton.Pt()*math.cos(dphi)
+      # dphi = self.p4_lepton.Phi() - self.p4_etmis.Phi()
+      # A = (wMass*wMass-mL*mL)/2. + self.p4_etmis.Pt()*self.p4_lepton.Pt()*math.cos(dphi)
+      A = (wMass*wMass-mL*mL)/2. + self.p4_etmis.Px()*self.p4_lepton.Px() + self.p4_etmis.Py()*self.p4_lepton.Py()
       a = math.pow(self.p4_lepton.Pz(),2) - math.pow(self.p4_lepton.E(),2)
       b = 2.*A*self.p4_lepton.Pz()
       c = A*A - math.pow(self.p4_etmis.Pt(),2)*math.pow(self.p4_lepton.E(),2)
@@ -104,7 +105,7 @@ class TTbarTagger:
       nuz2 = 0
       if(d==0):
          nuz1 = -b/(2.*a)
-         nuz2 = -b/(2.*a)
+         nuz2 = nuz1
       if(d>0):
          nuz1 = (-b + math.sqrt(d))/(2.*a)
          nuz2 = (-b - math.sqrt(d))/(2.*a)
@@ -140,7 +141,7 @@ class TTbarTagger:
                break
       if(not isOK): self.WmassConstraint(self.mW)
 
-   def Chi2(self,n,j1,j2,j3,j4,prnt=False):
+   def Chi2(self,n,j1,j2,j3,j4,j3a=-1,j4a=-1):
       pv = TLorentzVector()
       if(n==0): pv = self.p4_nu1
       else:     pv = self.p4_nu2
@@ -149,39 +150,42 @@ class TTbarTagger:
       pj2 = self.jets[j2]
       pj3 = self.jets[j3]
       pj4 = self.jets[j4]
+      ptH = pj1+pj2+pj3
+      ptL = pl+pv+pj4
+      if(j3a>-1): ptH = ptH+self.jets[j3a]
+      if(j4a>-1): ptL = ptL+self.jets[j4a]
       mjj   = (pj1+pj2).M()
-      mjjj  = (pj1+pj2+pj3).M()
-      pTjjj = (pj1+pj2+pj3).Pt()
-      pTlvj = (pl+pv+pj4).Pt()
-      pTtt  = (pj1+pj2+pj3+pl+pv+pj4).Pt()
-      mlvj  = (pl+pv+pj4).M()
-      dRtt  = (pl+pv+pj4).DeltaR((pj1+pj2+pj3))
-      dRwbhad   = (pj1+pj2).DeltaR(pj3)
-      dRwblep   = (pl+pv).DeltaR(pj4)
+      mjjj  = ptH.M()
+      pTjjj = ptH.Pt()
+      pTlvj = ptL.Pt()
+      mlvj  = ptL.M()
       '''
-      mjj-mW:           mean=-1.22914, sigma=4.20931, chi2/NDF=1.62094
-      mjjj-mt:          mean=-3.66844, sigma=6.87798, chi2/NDF=1.24702
-      mjjj-mjj-(mt-mW): mean=-1.45253, sigma=4.21545, chi2/NDF=0.837826
-      mlvj-mt:          mean=-0.617215, sigma=4.30607, chi2/NDF=1.69918
-      pTjjj-pTlvj:      mean=-1.42861, sigma=22.3835, chi2/NDF=1.5584
+	  mjj-mW:           mean=-1.2187,  sigma=4.24154,  chi2/NDF=1.47774,  p-value=0.169893
+      mjjj-mt:          mean=-3.56411,  sigma=6.90589,  chi2/NDF=1.36485,  p-value=0.181885
+      mjjj-mjj-(mt-mW): mean=-1.40952,  sigma=4.21938,  chi2/NDF=0.815404,  p-value=0.515037
+      mlvj-mt:          mean=-0.634862,  sigma=4.16711,  chi2/NDF=1.40582,  p-value=0.229102
+      pTjjj-pTlvj:      mean=-3.0794,  sigma=18.825,  chi2/NDF=1.16591,  p-value=0.315446
       '''
-      chi2_mW   = math.pow((mjj-self.mW-(-1.22914))/4.20931,2)
-      chi2_mtH  = math.pow((mjjj-self.mtop-(-3.66844))/6.87798,2)
-      chi2_dmWt = math.pow((mjjj-mjj-(self.mtop-self.mW)-(-1.45253))/4.21545,2)
-      chi2_mtL  = math.pow((mlvj-self.mtop-(-0.617215))/4.30607,2)
-      chi2_dpT  = math.pow((pTjjj-pTlvj-(-1.42861))/22.3835,2)
+      chi2_mW   = math.pow((mjj-self.mW-(-1.23999))/4.17961,2)
+      chi2_mtH  = math.pow((mjjj-self.mtop-(-3.43516))/6.80531,2)
+      chi2_dmWt = math.pow((mjjj-mjj-(self.mtop-self.mW)-(-1.3274))/4.14504,2)
+      chi2_mtL  = math.pow((mlvj-self.mtop-(-0.661523))/3.65806,2)
+      chi2_dpT  = math.pow((pTjjj-pTlvj-(-1.21077))/21.3552,2)
       chi2arr = [chi2_mW, chi2_dmWt, chi2_mtL, chi2_dpT]
       chi2 = 0
       for i in xrange(len(chi2arr)): chi2 += chi2arr[i]      
-      if(prnt):
-         print "  mjj=%g, mjjj=%g, mlvj=%g, dpT=%g" % (mjj,mjjj,mlvj,pTjjj-pTlvj)
-         print "  chi2_mW=%g, chi2_mtH=%g, chi2_mtL=%g chi2_mWt=%g, chi2_dpT=%g" % (chi2_mW,chi2_mtH,chi2_mtL,chi2_mWt,chi2_dpT)
-         return
       self.chi2all.append(chi2)
-      self.configurations.append({"nu":n, "j1":j1, "j2":j2, "j3":j3, "j4":j4})
+      self.configurations.append({"nu":n, "j1":j1, "j2":j2, "j3":j3, "j4":j4, "j3a":j3a, "j4a":j4a})
 
    def JetPermutations(self,n,j1,j2,j3,j4):
       index = [j1,j2,j3,j4]
+      setindex = set(index)
+      setijets = set(self.ijets)
+      setother = setindex^setijets
+      ################################
+      # otherjets = list(setother)
+      otherjets = []
+      ################################
       for i in xrange(len(index)):
          for j in xrange(len(index)):
             if(j==i): continue
@@ -189,8 +193,21 @@ class TTbarTagger:
                if(k==j or k==i): continue
                for l in xrange(len(index)):
                   if(l==k or l==j or l==i): continue
-                  if(index[k] not in self.ibjets and index[l] not in self.ibjets): continue ## j3 or j4 need to be b-tagged
-                  self.Chi2(n,index[i],index[j],index[k],index[l])
+
+                  ### in case of nBjets>0: j3 OR j4 need to be b-tagged
+                  # if(index[k] not in self.ibjets and index[l] not in self.ibjets): continue 
+
+                  ### in case of nBjets>1: j3 AND j4 need to be b-tagged
+                  if(index[k] not in self.ibjets or index[l] not in self.ibjets): continue
+                  
+                  if(len(otherjets)==0): self.Chi2(n,index[i],index[j],index[k],index[l])
+                  if(len(otherjets)==1):
+                     self.Chi2(n,index[i],index[j],index[k],index[l],otherjets[0],-1)
+                     self.Chi2(n,index[i],index[j],index[k],index[l],-1,otherjets[0])
+                  if(len(otherjets)>1):
+                     self.Chi2(n,index[i],index[j],index[k],index[l],otherjets[0],otherjets[1])
+                     self.Chi2(n,index[i],index[j],index[k],index[l],otherjets[1],otherjets[0])
+                  
 
    def ResolvedTagger(self):
       self.configurations = []
@@ -233,7 +250,6 @@ class TTbarTagger:
       #    mjjj  = (pj1+pj2+pj3).M()
       #    pTjjj = (pj1+pj2+pj3).Pt()
       #    pTlvj = (pl+pv+pj4).Pt()
-      #    pTtt  = (pj1+pj2+pj3+pl+pv+pj4).Pt()
       #    mlvj  = (pl+pv+pj4).M()
       #    chi2_mW   = math.pow((mjj-self.mW-(-1.65245e+00))/4.42579e+00,2)
       #    chi2_mtH  = math.pow((mjjj-self.mtop-(-3.78031e+00))/7.08922e+00,2)
