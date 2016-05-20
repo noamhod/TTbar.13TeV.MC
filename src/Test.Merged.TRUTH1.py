@@ -98,7 +98,7 @@ print THDM.modules
 
 #### histograms, plotters etc.
 #### must be aware of the model properties
-graphics = Graphics()
+graphics = Graphics("#mu+jets","Resolved selection")
 graphics.setModel(len(THDM.parameters),str(mX)+"GeV",nameX)
 graphics.bookHistos()
 
@@ -171,6 +171,7 @@ if(apnd=="yes"):
 
 
 #### begin runing over events
+ngg = 0
 nLepHad = 0
 nTruMatch_selected_objects = 0
 nTruMatch_before_selection = 0
@@ -181,8 +182,9 @@ for event in tree:
    ### counts
    if(n%10000==0):
       print "processed "+str(n)+", cutflow up to previous event:"
-      print cutflow
+      print "ngg =",ngg
       print "nLepHad =",nLepHad
+      print cutflow
       print "nTruMatch_before_selection =",nTruMatch_before_selection
       print "nTruMatch_after_selection  =",nTruMatch_after_selection
       print "nTruMatch_selected_objects =",nTruMatch_selected_objects
@@ -202,23 +204,16 @@ for event in tree:
    # print ""
    # hardproc.PrintHardProcess()
    # print "diagram0: ",hardproc.diagrams["t"]
-   # print "diagram1: ",hardproc.diagrams["tbar"]   
-
-   id_tops  = hardproc.id_tops
-   p4_glus  = hardproc.p4_gluons[0] # must be equal to hardproc.p4_gluons[1] since the same gluons produce the 2 tops...
-   p4_tops  = hardproc.p4_tops
-   topdecay = hardproc.topdecay
-   p4_prods = hardproc.p4_products ## map!
-   id_prods = hardproc.id_products ## map!
+   # print "diagram1: ",hardproc.diagrams["tbar"]
  
-   tru_mu    = TLorentzVector() # hardproc.l
-   tru_nu    = TLorentzVector() # hardproc.nu
-   tru_bL_prod  = TLorentzVector() # hardproc.b
-   tru_bL_decay = TLorentzVector() # hardproc.b
-   tru_qW    = TLorentzVector() # hardproc.qW
-   tru_qbarW = TLorentzVector() # hardproc.qbarW
-   tru_bH_prod  = TLorentzVector() # hardproc.qB
-   tru_bH_decay = TLorentzVector() # hardproc.qB
+   tru_mu       = TLorentzVector()
+   tru_nu       = TLorentzVector()
+   tru_bL_prod  = TLorentzVector()
+   tru_bL_decay = TLorentzVector()
+   tru_qW       = TLorentzVector()
+   tru_qbarW    = TLorentzVector()
+   tru_bH_prod  = TLorentzVector()
+   tru_bH_decay = TLorentzVector()
 
    itP = [ hardproc.diagrams["t"]["t-production"], hardproc.diagrams["tbar"]["t-production"] ]
    itR = [ hardproc.diagrams["t"]["t-radiation"],  hardproc.diagrams["tbar"]["t-radiation"]  ]
@@ -227,6 +222,11 @@ for event in tree:
    ibR = [ hardproc.diagrams["t"]["b-radiation"],  hardproc.diagrams["tbar"]["b-radiation"]  ]
    ibD = [ hardproc.diagrams["t"]["b-decay"],      hardproc.diagrams["tbar"]["b-decay"]      ]
    iW  = [ hardproc.diagrams["t"]["W-decay"],      hardproc.diagrams["tbar"]["W-decay"]      ]
+
+   #### beginning of 2HDM stuff
+   if(event.id_tquarks_parents[itP[0]][0]!=21 and event.id_tquarks_parents[itP[0]][1]!=21): continue ## not a gg production
+   ngg += 1
+
    if(abs(event.id_wbosons_children[iW[0]][0])>10):
       tru_bL_prod = event.p4_bquarks[ibP[0]]
       tru_bH_prod = event.p4_bquarks[ibP[1]]
@@ -295,13 +295,15 @@ for event in tree:
    #    print "  child2=%i: ptetaphie=(%g,%g,%g,%g)" % (event.id_bquarks_children[ibR[1]][1], event.p4_bquarks_children[ibR[1]][1].Pt(), event.p4_bquarks_children[ibR[1]][1].Eta(), event.p4_bquarks_children[ibR[1]][1].Phi(), event.p4_bquarks_children[ibR[1]][1].E())
    #    print "   dR=",event.p4_bquarks_children[ibR[1]][0].DeltaR(event.p4_bquarks_children[ibR[1]][1])
 
-   #### beginning of 2HDM stuff
-   ggProduction = True
-   if(apnd=="yes" and ggProduction):
-      g1=p4_glus[0]
-      g2=p4_glus[1]
-      t1=p4_tops[0]
-      t2=p4_tops[1]
+   if(apnd=="yes"):
+      # g1=p4_glus[0]
+      # g2=p4_glus[1]
+      # t1=p4_tops[0]
+      # t2=p4_tops[1]
+      g1 = event.p4_tquarks_parents[itP[0]][0] # = event.p4_tquarks_parents[itP[1]][0] or event.p4_tquarks_parents[itP[1]][1]
+      g2 = event.p4_tquarks_parents[itP[0]][1] # = event.p4_tquarks_parents[itP[1]][1] or event.p4_tquarks_parents[itP[1]][0]
+      t1 = event.p4_tquarks[itP[0]]
+      t2 = event.p4_tquarks[itP[1]]
       mtt = (t1+t2).M()
       p = [[ g1.E(), g1.Px(), g1.Py(), g1.Pz() ],
            [ g2.E(), g2.Px(), g2.Py(), g2.Pz() ],
@@ -1105,9 +1107,10 @@ hfname = path+"/histograms."+name+"."+nameX+"."+str(mX)+"GeV.root"
 graphics.writeHistos(hfname)
 
 print "=================================================== cutflow ==================================================="
-print "Processessed: ",n
-print cutflow
+print "Processed: ",n
+print "ngg =",ngg
 print "nLepHad = ",nLepHad
+print cutflow
 print "nTruMatch_before_selection = ",nTruMatch_before_selection
 print "nTruMatch_after_selection  = ",nTruMatch_after_selection
 print "nTruMatch_selected_objects = ",nTruMatch_selected_objects

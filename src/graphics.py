@@ -8,7 +8,9 @@ import math
 class Graphics:
    'Class for ttbar jets selection'
 
-   def __init__(self):
+   def __init__(self,legtxt1,legtxt2=""):
+      self.legtxt1 = legtxt1
+      self.legtxt2 = legtxt2
       self.histos = {}
       self.ModelNpoints = 0
       self.ModelMass = ""
@@ -55,14 +57,16 @@ class Graphics:
       cnv.cd()
       if(logy): cnv.SetLogy()
       self.histos[name].Draw()
-      leg = TLegend(0.5,0.65,0.87,0.9,"","brNDC");
+      leg = TLegend(0.5,0.70,0.87,0.9,"","brNDC");
       leg.SetFillStyle(4000); # will be transparent
       leg.SetFillColor(0);
       leg.SetTextFont(42);
       leg.SetBorderSize(0);
       leg.AddEntry(0, "MadGraph+Pythia8 (OTF)", "");
-      leg.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}}#rightarrow#mu+jets", "");
-      leg.AddEntry(0, "Resolved selection", "");
+      # leg.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}}#rightarrow#mu+jets", "");
+      leg.AddEntry(0, "#it{gg}#rightarrow#it{t}#bar{#it{t}}#rightarrow"+self.legtxt1, "");
+      # leg.AddEntry(0, "Resolved selection", "");
+      if(self.legtxt2!=""): leg.AddEntry(0, self.legtxt2, "");
       if(legtxt==""): leg.AddEntry(self.histos[name],"Reconstructed tops","ple");
       else:           leg.AddEntry(self.histos[name],legtxt,"ple");
       leg.Draw("same")
@@ -235,6 +239,38 @@ class Graphics:
       
       cnv.Update()
       cnv.SaveAs(fname)
+
+   def plotHistNorm2(self,fname,name1,name2,logy=False):
+      cnv = TCanvas(name1,"",600,600)
+      cnv.Draw()
+      cnv.cd()
+      if(logy): cnv.SetLogy()
+      self.histos[name1].SetMinimum(0)
+      self.histos[name2].SetMinimum(0)
+      int1 = self.histos[name1].Integral()
+      max1 = self.histos[name1].GetMaximum()
+      int2 = self.histos[name2].Integral()
+      max2 = self.histos[name2].GetMaximum()
+      if(max2/int2>max1/int1):
+         self.histos[name2].DrawNormalized()
+         self.histos[name1].DrawNormalized("same")
+      else:
+         self.histos[name1].DrawNormalized()
+         self.histos[name2].DrawNormalized("same")
+      leg = TLegend(0.5,0.60,0.87,0.9,"","brNDC");
+      leg.SetFillStyle(4000); # will be transparent
+      leg.SetFillColor(0);
+      leg.SetTextFont(42);
+      leg.SetBorderSize(0);
+      leg.AddEntry(0, "MadGraph+Pythia8 (OTF)", "");
+      leg.AddEntry(0, "#it{pp}#rightarrow#it{t}#bar{#it{t}}#rightarrow#mu+jets", "");
+      leg.AddEntry(0, "Resolved selection", "");
+      leg.AddEntry(self.histos[name1],"gg production","ple");
+      leg.AddEntry(self.histos[name2],"q#bar{q} production","ple");
+      leg.Draw("same")
+      cnv.Update()
+      cnv.RedrawAxis()
+      cnv.SaveAs(fname)
    
    def writeHistos(self,name):
       hfile = TFile(name,"RECREATE")
@@ -271,6 +307,15 @@ class Graphics:
       self.addHist1("Jets:pT2",  ";Second jet p_{T} [GeV];Events",50,0,600)
       self.addHist1("Jets:pT3",  ";Third jet p_{T} [GeV];Events",50,0,600)
       self.addHist1("Jets:pT4",  ";Forth jet p_{T} [GeV];Events",50,0,600)
+      self.addHist1("Jets:pT5",  ";Fifth jet p_{T} [GeV];Events",50,0,600)
+      self.addHist1("Jets:pT6",  ";Sixth jet p_{T} [GeV];Events",50,0,600)
+      self.addHist1("Jets:m1",  ";First jet mass [GeV];Events",50,0,200)
+      self.addHist1("Jets:m2",  ";Second jet mass [GeV];Events",50,0,200)
+      self.addHist1("Jets:m3",  ";Third jet mass [GeV];Events",50,0,200)
+      self.addHist1("Jets:m4",  ";Forth jet mass [GeV];Events",50,0,200)
+      self.addHist1("Jets:m5",  ";Fifth jet mass [GeV];Events",50,0,200)
+      self.addHist1("Jets:m6",  ";Sixth jet mass [GeV];Events",50,0,200)
+      self.addHist1("Jets:ht",  ";Jets #it{H}_{T} [GeV];Events",100,0,1500)
       
       self.addHist1("BJets:Mult", ";B Jet multiplicity;Events",5,0,5)
       self.addHist1("BJets:pT1",  ";First B jet p_{T} [GeV];Events",50,0,600)
@@ -476,3 +521,19 @@ class Graphics:
       self.addHist1("HardProcess:WithSelection:dRlephad",         ";#DeltaR(jjj,lvj);Events",100,1,5.2, ROOT.kAzure,20)
       self.addHist1("HardProcess:WithSelection:dRwbhad",          ";#DeltaR(jj,b_{had}^{notag});Events",100,0,5, ROOT.kAzure,20)
       self.addHist1("HardProcess:WithSelection:dRwblep",          ";#DeltaR(lv,b_{lep}^{notag});Events",100,0,5, ROOT.kAzure,20)
+
+
+      self.addHist1("HardProcess:qq:mtt",";#it{m}_{t#bar{t}} [GeV];Events",100,350,1350, ROOT.kAzure,20)
+      self.addHist1("HardProcess:qq:pTt",";#it{p}_{T}^{t} [GeV];Events",100,0,500, ROOT.kAzure,20)
+      self.addHist1("HardProcess:qq:pTtbar",";#it{p}_{T}^{#bar{t}} [GeV];Events",100,0,500, ROOT.kAzure,20)
+      self.addHist1("HardProcess:qq:etat",";#eta_{t};Events",100,-5,+5, ROOT.kAzure,20)
+      self.addHist1("HardProcess:qq:etatbar",";#eta_{#bar{t}};Events",100,-5,+5, ROOT.kAzure,20)
+      self.addHist1("HardProcess:qq:x",      ";#it{x};Events",100,0,+1, ROOT.kAzure,20)
+
+      self.addHist1("HardProcess:gg:mtt",";#it{m}_{t#bar{t}} [GeV];Events",100,350,1350, ROOT.kBlack,20)
+      self.addHist1("HardProcess:gg:pTt",";#it{p}_{T}^{t} [GeV];Events",100,0,500, ROOT.kBlack,20)
+      self.addHist1("HardProcess:gg:pTtbar",";#it{p}_{T}^{#bar{t}} [GeV];Events",100,0,500, ROOT.kBlack,20)
+      self.addHist1("HardProcess:gg:etat",";#eta_{t};Events",100,-5,+5, ROOT.kBlack,20)
+      self.addHist1("HardProcess:gg:etatbar",";#eta_{#bar{t}};Events",100,-5,+5, ROOT.kBlack,20)
+      self.addHist1("HardProcess:gg:x",      ";#it{x};Events",100,0,+1, ROOT.kBlack,20)
+      
