@@ -316,6 +316,8 @@ class Graphics:
       self.addHist1("Jets:m5",  ";Fifth jet mass [GeV];Events",50,0,200)
       self.addHist1("Jets:m6",  ";Sixth jet mass [GeV];Events",50,0,200)
       self.addHist1("Jets:ht",  ";Jets #it{H}_{T} [GeV];Events",100,0,1500)
+
+      self.addHist1("LepJets:ht",  ";Jets+Leptons #it{H}_{T} [GeV];Events",100,0,1500)
       
       self.addHist1("BJets:Mult", ";B Jet multiplicity;Events",5,0,5)
       self.addHist1("BJets:pT1",  ";First B jet p_{T} [GeV];Events",50,0,600)

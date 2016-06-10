@@ -82,11 +82,15 @@ gROOT.LoadMacro( "src/Loader.C+" )
 ROOT.gROOT.SetBatch(1)
 rootstyle.setStyle()
 
-path = ROOT.gSystem.ExpandPathName("$HOME/Downloads/tops")
-tfile = TFile(path+"/histograms.mu.A.root","READ")
+# path = ROOT.gSystem.ExpandPathName("$HOME/Downloads/tops")
+# tfile = TFile(path+"/histograms.mu.A.root","READ")
+# fnameall = path+"/histograms.mu.matching.pdf"
+# fname    = path+"/histograms.mu.matching"
 
-fnameall = path+"/histograms.mu.matching.pdf"
-fname    = path+"/histograms.mu.matching"
+path = ROOT.gSystem.ExpandPathName("$HOME/Downloads/MGPy8EG_A14N_ttbarNp012p")
+tfile = TFile(path+"/histograms.HTX.A.750GeV.root","READ")
+fnameall = path+"/histograms.HTX.A.750GeV.matching.pdf"
+fname    = path+"/histograms.HTX.A.750GeV.matching"
 
 addHists("mjj",2)
 addHists("mjjj",2)

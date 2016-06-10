@@ -185,6 +185,7 @@ class HardProcessTops:
       class_name = self.__class__.__name__
       # print class_name, "destroyed"
 
+
    def PrintHardProcess(self):
       print "--- t-quarks:"
       for j in xrange(self.p4_tquarks.size()):
@@ -253,7 +254,6 @@ class HardProcessTops:
       self.diagrams[topname]["W-production"] = self.barcode2index_w[w_prod_barcode]
       self.diagrams[topname]["b-production"] = self.barcode2index_b[b_prod_barcode]
 
-
       index = self.barcode2index_w[w_prod_barcode]
       while(self.id_wbosons_children[index].size()==1):
          barcode = self.bc_wbosons_children[index][0]
@@ -272,6 +272,10 @@ class HardProcessTops:
                quit()
          index = self.barcode2index_b[barcode]
       self.diagrams[topname]["b-decay"] = index
+
+
+   def PrintDIagram(self):
+      
 
 
    def SetHardProcess(self):

@@ -36,8 +36,10 @@ THDM.setParameters(nameX,mX,cuts,type,sba)
 # print THDM.modules
 
 #### the root file with all the histos
-path = ROOT.gSystem.ExpandPathName("$HOME/Downloads/tops")
-tfile = TFile(path+"/histograms.mu."+nameX+"."+str(mX)+"GeV.root","READ")
+# path = ROOT.gSystem.ExpandPathName("$HOME/Downloads/tops")
+path = ROOT.gSystem.ExpandPathName("$HOME/Downloads/MGPy8EG_A14N_ttbarNp012p")
+# tfile = TFile(path+"/histograms.mu."+nameX+"."+str(mX)+"GeV.root","READ")
+tfile = TFile(path+"/histograms.HTX."+nameX+"."+str(mX)+"GeV.root","READ")
 
 ### rearrange the model histograms
 tanbindices = {}

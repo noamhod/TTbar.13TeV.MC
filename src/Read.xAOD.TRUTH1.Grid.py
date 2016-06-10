@@ -57,6 +57,16 @@ tfile = "tops.SM.TRUTH1.root"
 tfile = TFile(tfile,"RECREATE")
 tree = TTree("SM","SM")
 
+Q = array( 'f', [ 0 ] )
+PDGID1 = array( 'i', [ 0 ] )
+PDGID2 = array( 'i', [ 0 ] )
+
+p4_me = ROOT.vector(TLorentzVector)()
+id_me = ROOT.vector(int)()
+st_me = ROOT.vector(int)()
+bc_me = ROOT.vector(int)()
+MEcode = array( 'i', [ 0 ] )
+
 p4_muons     = ROOT.vector(TLorentzVector)()
 id_muons     = ROOT.vector(int)()
 st_muons     = ROOT.vector(int)()
@@ -106,7 +116,17 @@ RunNumber     = array( 'i', [ 0 ] )
 EventNumber   = array( 'i', [ 0 ] )
 MCEventWeight = array( 'f', [ 0 ] )
 geneff        = array( 'f', [ 0 ] )
-sigma         = array( 'f', [ 0 ] )
+
+
+tree.Branch("Q",Q,"Q/I")
+tree.Branch("PDGID1",PDGID1,"PDGID1/I")
+tree.Branch("PDGID2",PDGID2,"PDGID2/I")
+
+tree.Branch("p4_me",p4_me)
+tree.Branch("id_me",id_me)
+tree.Branch("st_me",st_me)
+tree.Branch("bc_me",bc_me)
+tree.Branch("MEcode",MEcode,"MEcode/I")
 
 tree.Branch("p4_bquarks",p4_bquarks)
 tree.Branch("id_bquarks",id_bquarks)
@@ -159,10 +179,15 @@ tree.Branch("RunNumber",RunNumber,"RunNumber/I")
 tree.Branch("EventNumber",EventNumber,"EventNumber/I")
 tree.Branch("MCEventWeight",MCEventWeight,"MCEventWeight/F")
 tree.Branch("geneff",geneff,"geneff/F")
-tree.Branch("sigma",sigma,"sigma/F")
+
 
 
 def ClearVectors():
+   ### ME participants
+   p4_me.clear()
+   id_me.clear()
+   st_me.clear()
+   bc_me.clear()
    ### b-quarks
    p4_bquarks.clear()
    id_bquarks.clear()
@@ -241,14 +266,119 @@ p4_tmp = ROOT.vector(TLorentzVector)()
 id_tmp = ROOT.vector(int)()
 bc_tmp = ROOT.vector(int)()
 
+#####################
+makegraph = False ###
+#####################
+if(makegraph):
+   fgraphs = open('graphs.py','w')
+   fgraphs.write("#!/usr/bin/python\n")
+   fgraphs.write("events = [\n")
+   fgraphs.close()
+
+ngg = 0
+ngq = 0
+nqq = 0
+ntt = 0
+nttg = 0
+nttgg = 0
+nttqq = 0
+nttxx = 0
 npassed = 0
 print( "Number of input events: %s" % t.GetEntries() )
 for entry in xrange(t.GetEntries()):
    t.GetEntry(entry)
    ClearVectors()
 
+   ### for the graph
+   evt = "%i" % t.EventInfo.eventNumber()
+   entries = {}
+
+   ### for the ME
+   meindices = {"tops":[-1,-1], "parents1":[-1,-1], "parents2":[-1,-1], "sisters1":[], "sisters2":[]}
+
+   ### PDF info
+   pdfinfo = t.TruthEvents[0].pdfInfo()
+   Q[0]      = pdfinfo.Q
+   PDGID1[0] = pdfinfo.pdgId1
+   PDGID2[0] = pdfinfo.pdgId2
+
+
    for i in xrange(t.TruthParticles.size()):
       p = t.TruthParticles.at(i)
+
+      if(makegraph):
+         ##### graph
+         childrenbc = {}
+         parentsbc  = {}
+         if(p.hasDecayVtx()):
+           decayvtx = p.decayVtx()
+           for j in xrange(decayvtx.nOutgoingParticles()):
+              child = decayvtx.outgoingParticle(j)
+              if(not child): continue
+              childrenbc.update({child.barcode():child.pdgId()})
+         if(p.hasProdVtx()):
+               prodvtx = p.prodVtx()
+               for j in xrange(prodvtx.nIncomingParticles()):
+                  parent = prodvtx.incomingParticle(j)
+                  if(not parent): continue
+                  parentsbc.update({parent.barcode():parent.pdgId()})
+         if(p.barcode() not in entries.keys()): entries.update({p.barcode():{"evt":evt, "pdgId":p.pdgId(), "status":p.status(), "childrenbc":childrenbc, "parentsbc":parentsbc}})
+         #############
+
+      ### for ME
+      if(abs(p.pdgId())==6 and (p.status()==22 or p.status()==23) and (meindices["tops"][0]<0 or meindices["tops"][1]<0)):
+         if(p.hasProdVtx()):
+            prodvtx = p.prodVtx()
+            if(prodvtx.nIncomingParticles()==2):
+               iTop = -1
+               sTop = ""
+               if(meindices["tops"][0]<0): iTop = 0
+               else:                       iTop = 1
+               sTop = str(iTop+1)
+               meindices["tops"][iTop] = p.index()
+               parent1 = prodvtx.incomingParticle(0)
+               parent2 = prodvtx.incomingParticle(1)
+               if(parent1):
+                  meindices["parents"+sTop][0] = parent1.index()
+                  if(parent1.hasDecayVtx()):
+                    decayvtx = parent1.decayVtx()
+                    for j in xrange(decayvtx.nOutgoingParticles()):
+                       child = decayvtx.outgoingParticle(j)
+                       if(not child):             continue
+                       if(abs(child.pdgId())==6): continue
+                       if(child.index() not in meindices["sisters"+sTop]): meindices["sisters"+sTop].append(child.index())
+               if(parent2):
+                  meindices["parents"+sTop][1] = parent2.index()
+                  if(parent2.hasDecayVtx()):
+                    decayvtx = parent2.decayVtx()
+                    for j in xrange(decayvtx.nOutgoingParticles()):
+                       child = decayvtx.outgoingParticle(j)
+                       if(not child):             continue
+                       if(abs(child.pdgId())==6): continue
+                       if(child.index() not in meindices["sisters"+sTop]): meindices["sisters"+sTop].append(child.index())
+            else:
+               print "Top parents number is not 2: ", prodvtx.nIncomingParticles()
+               quit()
+            if(meindices["parents"+sTop][0]<0 or meindices["parents"+sTop][1]<0):
+               print "Parent indices are invalid: (%i, %i)" % (meindices["parents"+sTop][0], meindices["parents"+sTop][1])
+               quit()
+
+      
+      # if(i<20):
+      #    print "[%i] id=%i, st=%i, bc=%i" % (i,p.pdgId(),p.status(),p.barcode())
+      #    if(p.hasProdVtx()):
+      #       prodvtx = p.prodVtx()
+      #       for j in xrange(prodvtx.nIncomingParticles()):
+      #          parent = prodvtx.incomingParticle(j)
+      #          if(not parent): continue
+      #          print "  parent id=%i, bc=%i" % (parent.pdgId(),parent.barcode())
+      #    if(p.hasDecayVtx()):
+      #       decayvtx = p.decayVtx()
+      #       for j in xrange(decayvtx.nOutgoingParticles()):
+      #          child = decayvtx.outgoingParticle(j)
+      #          if(not child): continue
+      #          print "    child id=%i, bc=%i" % (child.pdgId(),child.barcode())
+
       ### get b-quarks with parents and children
       if(abs(p.pdgId())==5):
          v = TLorentzVector()
@@ -346,6 +476,109 @@ for entry in xrange(t.GetEntries()):
                id_wbosons_children[id_wbosons_children.size()-1].push_back(child.pdgId())
                bc_wbosons_children[bc_wbosons_children.size()-1].push_back(child.barcode())
 
+   if(makegraph):
+      fgraphs = open('graphs.py','a')
+      fgraphs.write(str(entries)+",\n")
+      fgraphs.close()
+
+
+   ### ME stuff
+   t1 = meindices["tops"][0]
+   t2 = meindices["tops"][1]
+   p1a = meindices["parents1"][0]
+   p1b = meindices["parents1"][1]
+   p2a = meindices["parents2"][0]
+   p2b = meindices["parents2"][1]
+   s1a = -1
+   if(len(meindices["sisters1"])>0): s1a = meindices["sisters1"][0]
+   s1b = -1
+   if(len(meindices["sisters1"])>1): s1b = meindices["sisters1"][1]
+   s2a = -1
+   if(len(meindices["sisters2"])>0): s2a = meindices["sisters2"][0]
+   s2b = -1
+   if(len(meindices["sisters2"])>1): s2b = meindices["sisters2"][1]
+   # print "\nEvent "+evt+" ->", meindices
+   if(t1>=0 and t2>=0 and p1a>=0 and p1b>=0 and p2a>=0 and p2b>=0):
+      # print "top1: id=%i, st=%i, bc=%i -> par1id=%i, par2id=%i" % (t.TruthParticles[t1].pdgId(), t.TruthParticles[t1].status(), t.TruthParticles[t1].barcode(), t.TruthParticles[p1a].pdgId(), t.TruthParticles[p1b].pdgId())
+      # for i in meindices["sisters1"]:
+      #    print "sister1 index=%i: id=%i, status=%i" % (i, t.TruthParticles[i].pdgId(),t.TruthParticles[i].status())
+      # print "top2: id=%i, st=%i, bc=%i -> par1id=%i, par2id=%i" % (t.TruthParticles.at(t2).pdgId(), t.TruthParticles.at(t2).status(), t.TruthParticles.at(t2).barcode(), t.TruthParticles[p2a].pdgId(), t.TruthParticles.at(p2b).pdgId())
+      # for i in meindices["sisters2"]:
+      #    print "sister2 index=%i: id=%i, status=%i" % (i, t.TruthParticles[i].pdgId(),t.TruthParticles[i].status())
+
+      isGG = True
+      ### check that the top parents are gluons
+      if(t.TruthParticles[p1a].pdgId()!=21 or t.TruthParticles[p1b].pdgId()!=21):
+         # print "Not a gg production: idmother1=%i, idmother2=%i" % (t.TruthParticles[p1a].pdgId(),t.TruthParticles[p1b].pdgId())
+         if(abs(t.TruthParticles[p1a].pdgId())<6   and t.TruthParticles[p1b].pdgId()==21):
+            ngq += 1
+            MEcode[0] = -1
+         elif(abs(t.TruthParticles[p1b].pdgId())<6 and t.TruthParticles[p1a].pdgId()==21):
+            ngq += 1
+            MEcode[0] = -1
+         else:
+            nqq += 1
+            MEcode[0] = -2
+         isGG = False
+      else:
+         ngg += 1
+
+      ### check that the tops parents are the same
+      if(isGG and ((p2a!=p1a and p2a!=p1b) or (p2b!=p1a and p2b!=p1b))):
+         print "ERROR: tops parents (gluons) are not the same (p1a=%i, p1b=%i, p2a=%i, p2b=%i)" % (p1a,p1b,p2a,p2b)
+         isGG = False
+      ### check that the tops sisters are the same
+      if(isGG and ((s2a!=s1a and s2a!=s1b) or (s2b!=s1a and s2b!=s1b))):
+         print "ERROR: tops sisters are not the same (s1a=%i, s1b=%i, s2a=%i, s2b=%i)" % (s1a,s1b,s2a,s2b)
+         isGG = False
+
+      ### fill the ME vectors anyhow (regardless of the production state)
+      finalMEindices = [p1a,p1b,t1,t2]
+      if(s1a>=0): finalMEindices.append(s1a)
+      if(s1b>=0): finalMEindices.append(s1b)
+      for k in finalMEindices:
+         p = t.TruthParticles[k]
+         v = TLorentzVector()
+         v.SetPxPyPzE(p.px()/1000.,p.py()/1000.,p.pz()/1000.,p.e()/1000.)
+         p4_me.push_back(v)
+         id_me.push_back(p.pdgId())
+         st_me.push_back(p.status())
+         bc_me.push_back(p.barcode())
+
+      if(isGG):
+         if(s1a<0  and s1b<0):
+            MEcode[0] = 0 ### no extra partons
+            ntt += 1
+         elif(s1a>=0 and s1b<0):
+            MEcode[0] = 1 ### one extra gluon
+            nttg += 1
+         else:
+            id1 = t.TruthParticles[s1a].pdgId()
+            id2 = t.TruthParticles[s1b].pdgId()
+            if(id1==21 and id2==21):
+               MEcode[0] = 2 ### extra gg
+               nttgg += 1
+            else:
+               if(abs(id1)==abs(id2)): nttqq += 1
+               else:                   nttxx += 1
+               if  (abs(id1)==2 and abs(id2)==2): MEcode[0] = 3 ### extra uu
+               elif(abs(id1)==1 and abs(id2)==1): MEcode[0] = 4 ### extra dd
+               elif(abs(id1)==3 and abs(id2)==3): MEcode[0] = 5 ### extra ss
+               elif(abs(id1)==4 and abs(id2)==4): MEcode[0] = 6 ### extra cc
+               elif(abs(id1)==5 and abs(id2)==5): MEcode[0] = 7 ### extra bb
+               else: 
+                  print "ERROR: unknown parton final state (id1=%i id2=%i)" % (id1,id2)  
+   else:
+      print "ERROR: cannot find ME (t1=%i t2=%i p1a=%i p1b=%i p2a=%i p2b=%i)" % (t1,t2,p1a,p1b,p2a,p2b)
+
+   q = 0
+   for j in xrange(p4_me.size()):
+      if(j<2): continue
+      q += math.sqrt(p4_me[j].M()*p4_me[j].M() + p4_me[j].Pt()*p4_me[j].Pt())
+   q = q/2.
+   if(abs(pdfinfo.Q-q)/pdfinfo.Q>0.05):
+      print ">0.05 relative difference: Q=%g, q=%g" % (pdfinfo.Q, q)
+
    ### "reconstructed" objects
    for i in xrange(t.TruthMuons.size()):
       p = t.TruthMuons.at(i)
@@ -383,22 +616,16 @@ for entry in xrange(t.GetEntries()):
    MCEventWeight[0] = t.EventInfo.mcEventWeight()
 
    geneff[0] = 1.
-   sigma[0]  = 0.
    if(name=="HT0"):
       geneff[0] = 0.489
-      sigma[0]  = 400000  # N=10e6, L=25fb-1
    if(name=="HT1"):
       geneff[0] = 0.0344
-      sigma[0]  = 27777.8 # N=5e6, L=180fb-1
    if(name=="HT2"):
       geneff[0] = 0.0114
-      sigma[0]  = 6666.7  # N=5e6, L=750fb-1
    if(name=="HT3"):
       geneff[0] = 0.00968
-      sigma[0]  = 7272.7  # N=8e6, L=1100fb-1
    if(name=="HT4"):
       geneff[0] = 0.00368
-      sigma[0]  = 333.3   # N=1e6, L=3000fb-1
 
    ###############
    tree.Fill() ###
@@ -407,8 +634,16 @@ for entry in xrange(t.GetEntries()):
    if(entry%1000==0):
       print("Processing run %i, event %i, entry %i" % ( t.EventInfo.runNumber(), t.EventInfo.eventNumber(), entry+1) )
       print("nmuons=%i, nelectrons=%i, njets=%i, MET=%g") % (p4_muons.size(),p4_electrons.size(),p4_akt4jets.size(),p4_MET[0].E())
+      print("ngg=%i, ngq=%i, nqq=%i") % (ngg,ngq,nqq)
+      print("ntt=%i, nttg=%i, nttgg=%i, nttqq=%i, nttxx=%i") % (ntt,nttg,nttgg,nttqq,nttxx)
 
    pass # end loop over entries
+
+if(makegraph):
+   fgraphs = open('graphs.py','a')
+   fgraphs.write("]\n")
+   fgraphs.close()
+
 ClearVectors() # cleanup
 print "nPassed = ",npassed
 tree.GetCurrentFile().Write()
