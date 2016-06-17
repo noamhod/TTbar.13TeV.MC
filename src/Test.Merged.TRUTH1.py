@@ -1,8 +1,10 @@
 #!/usr/bin/python
 import ROOT
-from ROOT import std, gROOT, gStyle, gPad, TCanvas, TH1, TH1D, TH2D, TLegend, TLine, TFile, TTree, TChain, TLorentzVector, TMath, TVirtualPad, TEventList, TVector2, TRandom3
+from ROOT import *
 import sys
 sys.path.append('/Users/hod/GitHub/2HDM')
+sys.path.append('/Users/hod/MC/LHAPDF/install-karl/lib/python2.7/site-packages/')
+import lhapdf
 import kinematics
 import THDM
 import os
@@ -86,7 +88,7 @@ mX        = THDM.model.mX
 nameX     = THDM.model.nameX
 cuts      = THDM.model.cuts
 mgpath    = THDM.model.mgpath
-alphaS    = THDM.model.alphaS
+# AlphaS    = lhapdf.mkAlphaS("NNPDF30_nlo_as_0118")
 nhel      = THDM.model.nhel
 libmatrix = "/Users/hod/GitHub/2HDM/matrix/"+nameX+"/"+str(mX)+"/"+str(sba)+"/"
 THDM.setParameters(nameX,mX,cuts,type,sba)
@@ -232,7 +234,9 @@ for event in tree:
    iW  = [ hardproc.diagrams["t"]["W-decay"],      hardproc.diagrams["tbar"]["W-decay"]      ]
 
    #### beginning of 2HDM stuff
-   if(event.id_tquarks_parents[itP[0]][0]!=21 and event.id_tquarks_parents[itP[0]][1]!=21): continue ## not a gg production
+   # if(event.id_tquarks_parents[itP[0]][0]!=21 and event.id_tquarks_parents[itP[0]][1]!=21): continue ## not a gg production
+   # if(event.MEcode<0): continue ## not a gg production
+   if(event.MEcode!=0): continue ## not a gg-->tt event (can be gq/qq-->tt and or with extra partons)
    ngg += 1
 
    if(abs(event.id_wbosons_children[iW[0]][0])>10):
@@ -313,18 +317,59 @@ for event in tree:
    #    print "   dR=",event.p4_bquarks_children[ibR[1]][0].DeltaR(event.p4_bquarks_children[ibR[1]][1])
 
    if(apnd=="yes"):
-      g1 = event.p4_tquarks_parents[itP[0]][0] # = event.p4_tquarks_parents[itP[1]][0] or event.p4_tquarks_parents[itP[1]][1]
-      g2 = event.p4_tquarks_parents[itP[0]][1] # = event.p4_tquarks_parents[itP[1]][1] or event.p4_tquarks_parents[itP[1]][0]
-      t1 = event.p4_tquarks[itP[0]]
-      t2 = event.p4_tquarks[itP[1]]
+      # g1 = event.p4_tquarks_parents[itP[0]][0] # = event.p4_tquarks_parents[itP[1]][0] or event.p4_tquarks_parents[itP[1]][1]
+      # g2 = event.p4_tquarks_parents[itP[0]][1] # = event.p4_tquarks_parents[itP[1]][1] or event.p4_tquarks_parents[itP[1]][0]
+      # t1 = event.p4_tquarks[itP[0]]
+      # t2 = event.p4_tquarks[itP[1]]
+      g1 = event.p4_me[0]
+      g2 = event.p4_me[1]
+      t1 = event.p4_me[2]
+      t2 = event.p4_me[3]
+      s1 = TLorentzVector()
+      s2 = TLorentzVector()
+      if(event.MEcode>0): s1 = event.p4_me[4]
+      if(event.MEcode>1): s2 = event.p4_me[5]
       mtt = (t1+t2).M()
       p = [[ g1.E(), g1.Px(), g1.Py(), g1.Pz() ],
            [ g2.E(), g2.Px(), g2.Py(), g2.Pz() ],
            [ t1.E(), t1.Px(), t1.Py(), t1.Pz() ],
            [ t2.E(), t2.Px(), t2.Py(), t2.Pz() ]]
-      P=THDM.invert_momenta(p)
+      if(event.MEcode>0): p.append([s1.E(), s1.Px(), s1.Py(), s1.Pz()])
+      if(event.MEcode>1): p.append([s2.E(), s2.Px(), s2.Py(), s2.Pz()])
+      P = THDM.invert_momenta(p)
+      Q = event.Q
+      # Q = 0.
+      # for j in xrange(event.p4_me.size()):
+      #    if(j<2): continue
+      #    Q += math.sqrt(event.p4_me[j].M()*event.p4_me[j].M() + event.p4_me[j].Pt()*event.p4_me[j].Pt())
+      # Q = Q/2.
+      alphas = THDM.model.AlphaS.alphasQ(Q)
       ## the ME^2 and the weight (once, not per tanb or similar)
-      me2SM = THDM.modules['matrix2SMpy'].get_me(P,alphaS,nhel)  ### calculate the SM ME^2
+      metopologyXX = "ttx"
+      metopologySM = "ttx"
+      if(event.MEcode==1):
+         metopologyXX += "g"
+         metopologySM += "g"
+      if(event.MEcode==2):
+         metopologyXX += "gg"
+         metopologySM += "gg"
+      if(event.MEcode==3):
+         metopologyXX += "uux"
+         metopologySM += "uux"
+      if(event.MEcode==4):
+         metopologyXX += "ddx"
+         metopologySM += "uux"
+      if(event.MEcode==5):
+         metopologyXX += "ssx"
+         metopologySM += "uux"
+      if(event.MEcode==6):
+         metopologyXX += "ccx"
+         metopologySM += "uux"
+      if(event.MEcode==7):
+         metopologyXX += "bbx"
+         metopologySM += "uux"
+      # print "MEcode="+str(event.MEcode)+", topology="+metopologyXX+", Q="+str(Q)+", alphaS="+str(alphas)+" -> p =",p
+      me2SM = THDM.modules['matrix2SM'+metopologySM+'py'].get_me(P,alphas,nhel)  ### calculate the SM ME^2
       ### clear decoration branches
       wgt.clear()
       tnb.clear()
@@ -335,11 +380,13 @@ for event in tree:
       ymc.clear()
       ymtau.clear()
       ymmu.clear()
+      # print ""
       ### loop over all model points
       for i in xrange(len(THDM.parameters)):
          ## the ME^2 and the weight
-         me2XX = THDM.modules['matrix2'+nameX+str(i)+'py'].get_me(P,alphaS,nhel) ### calculate the X ME^2
+         me2XX = THDM.modules['matrix2'+nameX+str(i)+metopologyXX+'py'].get_me(P,alphas,nhel) ### calculate the X ME^2
          weightX = me2XX/me2SM                                                   ### calculate the weight
+         # print "tanb=%g, MEcode=%i, metopologySM=%s, metopologyXX=%s, me2SM=%g, me2XX=%g" % (THDM.parameters[i].get("tanb"), event.MEcode, metopologySM, metopologyXX, me2SM, me2XX)
          wgt.push_back(weightX)
          tnb.push_back(THDM.parameters[i].get("tanb"))
          wdtA.push_back(THDM.parameters[i].get("wA"))

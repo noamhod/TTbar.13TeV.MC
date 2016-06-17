@@ -274,7 +274,7 @@ class HardProcessTops:
       self.diagrams[topname]["b-decay"] = index
 
 
-   def PrintDIagram(self):
+   # def PrintDIagram(self):
       
 
 
