@@ -224,8 +224,15 @@ for i in xrange(100): #xrange(len(graphs.events)):
    leg = ['status<20', 'status=21', 'status=22', 'status=23', '30<status<40', '40<status<50', '50<status<60', '60<status<70', '70<status']
    ax.legend(leg, loc=2, scatterpoints=1, markerscale=2)
 
+   
+   if(not os.path.exists("dot")):
+      print "please make dir dot/ here"
+      quit()
    write_dot(G,'dot/multi.'+label+'.dot')
    nx.draw(G,pos,labels=nlabels,with_labels=True, node_color=colors, node_size=100, font_size=5, arrows=True)
+   if(not os.path.exists("pdf")):
+      print "please make dir pdf/ here"
+      quit()
    plt.savefig("pdf/path."+label+".pdf")
    plt.close()
 
